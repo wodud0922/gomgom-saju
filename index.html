@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>곰곰 사주 · 귀여운 곰이 봐주는 무료 사주</title>
+<meta name="description" content="생년월일만 넣으면 하얀 곰이 사주 여덟 글자와 오행, 타고난 성향을 귀엽게 풀어줘요. 무료 사주 보기, 오행 분석, 인스타 공유 카드까지.">
+<meta name="keywords" content="무료 사주, 사주, 사주팔자, 오행, 일간, 귀여운 사주, 곰곰 사주">
+<meta property="og:type" content="website">
+<meta property="og:title" content="곰곰 사주 · 내 사주를 같이 봐보자곰!">
+<meta property="og:description" content="생년월일만 넣으면 하얀 곰이 사주 여덟 글자와 오행을 풀어줘요.">
+<meta property="og:image" content="/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#e9f2fa">
+<link rel="icon" href="/bear.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.6.12/lunar.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+<div class="hero">
+<img src="bear.svg" width="92" height="80" alt="하얀 곰">
+<div class="bubble">내 사주를 같이 봐보자곰!<small>태어난 날을 알려주면 여덟 글자를 뽑아줄게곰</small></div>
+</div>
+
+<section class="card">
+<label for="cal">달력</label>
+<select id="cal"><option value="solar">양력</option><option value="lunar">음력</option><option value="leap">음력 (윤달)</option></select>
+<label for="y">태어난 날</label>
+<div class="row">
+<input id="y" type="number" inputmode="numeric" placeholder="년 1995" aria-label="년">
+<input id="m" type="number" inputmode="numeric" placeholder="월 5" aria-label="월">
+<input id="d" type="number" inputmode="numeric" placeholder="일 20" aria-label="일">
+</div>
+<label for="t">태어난 시간</label>
+<select id="t">
+<option value="">시간은 몰라곰</option>
+<option value="0">자시 (23:00~01:00)</option><option value="2">축시 (01:00~03:00)</option>
+<option value="4">인시 (03:00~05:00)</option><option value="6">묘시 (05:00~07:00)</option>
+<option value="8">진시 (07:00~09:00)</option><option value="10">사시 (09:00~11:00)</option>
+<option value="12">오시 (11:00~13:00)</option><option value="14">미시 (13:00~15:00)</option>
+<option value="16">신시 (15:00~17:00)</option><option value="18">유시 (17:00~19:00)</option>
+<option value="20">술시 (19:00~21:00)</option><option value="22">해시 (21:00~23:00)</option>
+</select>
+<button class="btn" id="go" type="button">사주 보러 가보자곰</button>
+<p class="err" id="err" role="alert"></p>
+</section>
+
+<div id="res">
+<section class="card">
+<h2>내 사주 여덟 글자</h2>
+<div class="pills" id="pills"></div>
+<h2>오행 기운</h2>
+<div id="bars"></div>
+<div class="say" id="say"></div>
+<button class="btn ghost" id="shareBtn" type="button">인스타 공유 카드 만들어보자곰</button>
+<div id="sharePrev" hidden><img id="shareImg" alt="내 사주 공유 카드"><p class="note">이미지를 길게 눌러 저장하고 스토리에 올려보자곰</p><a class="dl" id="shareDl" download="gomgom-saju.png">이미지 저장하기</a></div>
+</section>
+<section class="card">
+<h2>곰 풀이 (연애운, 재물운, 올해 운세)</h2>
+<div class="lock" id="lock">
+<div class="blur" aria-hidden="true"><p>올해는 새로운 인연이 가까이에 있어곰. 먼저 다가가 보자곰.</p><p>재물은 천천히 모이는 흐름이야곰. 작은 습관이 큰 힘이 돼곰.</p><p>하반기에는 하고 싶던 일을 시작하기 좋은 때가 와곰.</p></div>
+<div class="over"><button class="btn" id="buy" type="button" disabled style="opacity:.75;cursor:default">곰 풀이는 곧 열려곰</button></div>
+</div>
+<p class="toast" id="toast" role="status"></p>
+</section>
+<p class="foot">재미로 봐주면 좋겠어곰. 입력한 생일은 저장하지 않아곰. 태어난 곳의 시차 보정은 아직 없어곰.</p>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let last=null,busy=false;
+const GAN='甲乙丙丁戊己庚辛壬癸'.split(''),GK='갑을병정무기경신임계'.split('');
+const ZHI='子丑寅卯辰巳午未申酉戌亥'.split(''),ZK='자축인묘진사오미신유술해'.split('');
+const GE='木木火火土土金金水水'.split(''),ZE='水土木木土火火土金金土水'.split('');
+const EK={木:'목',火:'화',土:'토',金:'금',水:'수'},EN={木:'나무',火:'불',土:'흙',金:'쇠',水:'물'};
+const EC={木:'#6cc48a',火:'#f08a76',土:'#e6bb55',金:'#aab6c4',水:'#6aa8e8'};
+const TXT={
+甲:'큰 나무 같은 사람이곰. 곧고 씩씩하게 쭉쭉 자라는 타입이야곰!',
+乙:'풀꽃처럼 부드럽고 적응력 최고곰. 어디서든 살랑살랑 잘 지내는 타입이야곰!',
+丙:'해님 같은 사람이곰. 밝고 따뜻해서 주변이 환해지는 타입이야곰!',
+丁:'촛불 같은 사람이곰. 은은하고 섬세하게 마음을 밝혀주는 타입이야곰!',
+戊:'큰 산 같은 사람이곰. 듬직해서 다들 기대는 타입이야곰!',
+己:'포근한 흙 같은 사람이곰. 다정하게 품고 잘 키워내는 타입이야곰!',
+庚:'단단한 바위 같은 사람이곰. 의리 있고 결단력 있는 타입이야곰!',
+辛:'반짝이는 보석 같은 사람이곰. 섬세하고 감각 좋은 타입이야곰!',
+壬:'넓은 바다 같은 사람이곰. 생각이 깊고 스케일이 큰 타입이야곰!',
+癸:'촉촉한 빗방울 같은 사람이곰. 조용히 스며드는 감성 타입이야곰!'};
+function pill(lab,g,z,me){
+  if(!g)return '<div class="p"><b>'+lab+'</b><div class="q">?</div></div>';
+  const gi=GAN.indexOf(g),zi=ZHI.indexOf(z);
+  return '<div class="p'+(me?' me':'')+'"><b>'+lab+(me?'(나)':'')+'</b>'+
+  '<div class="c" style="--e:'+EC[GE[gi]]+'"><span>'+g+'</span><small>'+GK[gi]+EK[GE[gi]]+'</small></div>'+
+  '<div class="c" style="--e:'+EC[ZE[zi]]+'"><span>'+z+'</span><small>'+ZK[zi]+EK[ZE[zi]]+'</small></div></div>';
+}
+function run(){
+  const err=$('err');err.textContent='';
+  if(typeof Solar==='undefined'||typeof Lunar==='undefined'){err.textContent='만세력을 불러오지 못했어곰. 새로고침해보자곰';return}
+  const y=+$('y').value,m=+$('m').value,d=+$('d').value,t=$('t').value,cal=$('cal').value;
+  if(!(y>=1900&&y<=2099&&m>=1&&m<=12&&d>=1&&d<=31)){err.textContent='생년월일을 다시 확인해보자곰';return}
+  const known=t!=='',h=known?+t:12;
+  let ec;
+  try{
+    if(cal==='solar'){
+      if(new Date(y,m-1,d).getMonth()!==m-1)throw 0;
+      ec=Solar.fromYmdHms(y,m,d,h,0,0).getLunar().getEightChar();
+    }else{
+      ec=Lunar.fromYmdHms(y,cal==='leap'?-m:m,d,h,0,0).getEightChar();
+    }
+  }catch(e){err.textContent='없는 날짜야곰. 다시 확인해보자곰';return}
+  const P=[['시',known?ec.getTimeGan():'',known?ec.getTimeZhi():''],['일',ec.getDayGan(),ec.getDayZhi()],['월',ec.getMonthGan(),ec.getMonthZhi()],['연',ec.getYearGan(),ec.getYearZhi()]];
+  $('pills').innerHTML=P.map((p,i)=>pill(p[0],p[1],p[2],i===1)).join('');
+  const cnt={木:0,火:0,土:0,金:0,水:0};
+  P.forEach(p=>{if(p[1]){cnt[GE[GAN.indexOf(p[1])]]++;cnt[ZE[ZHI.indexOf(p[2])]]++}});
+  const total=known?8:6,els=Object.keys(cnt),mx=Math.max(...els.map(e=>cnt[e]));
+  $('bars').innerHTML=els.map(e=>'<div class="bar" style="--e:'+EC[e]+'"><span>'+e+' '+EN[e]+'</span><i><u style="width:'+(cnt[e]/total*100)+'%"></u></i><span>'+cnt[e]+'</span></div>').join('');
+  const dom=els.filter(e=>cnt[e]===mx).map(e=>e+'('+EN[e]+')').join(', ');
+  const miss=els.filter(e=>!cnt[e]).map(e=>e+'('+EN[e]+')').join(', ');
+  const dg=ec.getDayGan(),di=GAN.indexOf(dg);
+  $('say').innerHTML='너는 '+GK[di]+EK[GE[di]]+'('+dg+GE[di]+') 일간이야곰. '+TXT[dg]+'<br>제일 많은 기운은 '+dom+'이야곰. '+(miss?miss+' 기운은 비어 있어곰.':'다섯 기운이 골고루 있어곰!');
+  last={s:P.map(p=>p[0]+'주 '+(p[1]?p[1]+p[2]:'모름')).join(', '),cnt:els.map(e=>e+EN[e]+' '+cnt[e]).join(', '),dg:GK[di]+EK[GE[di]]+'('+dg+GE[di]+')'};
+  cardData={P,cnt,known,dgName:GK[di]+EK[GE[di]]+'('+dg+GE[di]+')',dgText:TXT[dg]};$('sharePrev').hidden=true;
+  $('res').style.display='block';
+  $('toast').textContent='';
+  $('res').scrollIntoView();
+}
+const SITE=location.host;
+let cardData=null;
+function rr(x,X,Y,W,H,R){x.beginPath();x.moveTo(X+R,Y);x.arcTo(X+W,Y,X+W,Y+H,R);x.arcTo(X+W,Y+H,X,Y+H,R);x.arcTo(X,Y+H,X,Y,R);x.arcTo(X,Y,X+W,Y,R);x.closePath()}
+function drawBear(x,cx,cy,s){
+  x.save();x.translate(cx-60*s,cy-52*s);x.scale(s,s);x.lineWidth=3;x.strokeStyle='#c9d8e8';
+  const circ=(a,b,r,f,st,al)=>{x.globalAlpha=al||1;x.beginPath();x.arc(a,b,r,0,Math.PI*2);x.fillStyle=f;x.fill();if(st)x.stroke();x.globalAlpha=1};
+  const ell=(a,b,rx,ry,f,st)=>{x.beginPath();x.ellipse(a,b,rx,ry,0,0,Math.PI*2);x.fillStyle=f;x.fill();if(st)x.stroke()};
+  circ(26,22,16,'#fff',1);circ(94,22,16,'#fff',1);circ(26,22,7,'#f6a9b4',0,.55);circ(94,22,7,'#f6a9b4',0,.55);
+  ell(60,58,46,40,'#fff',1);circ(42,52,4.5,'#34415a');circ(78,52,4.5,'#34415a');
+  x.lineWidth=2;ell(60,68,14,10,'#eef4fb',1);ell(60,64,5,3.5,'#34415a');
+  x.beginPath();x.moveTo(60,67.5);x.lineTo(60,71);x.moveTo(60,71);x.quadraticCurveTo(55,75,51,71);x.moveTo(60,71);x.quadraticCurveTo(65,75,69,71);
+  x.strokeStyle='#34415a';x.lineCap='round';x.stroke();
+  circ(29,66,6,'#f6a9b4',0,.65);circ(91,66,6,'#f6a9b4',0,.65);x.restore();
+}
+function wrap(x,t,cx,y,maxW,lh){
+  let line='',lines=[];
+  for(const ch of t){if(x.measureText(line+ch).width>maxW&&line){lines.push(line);line=ch}else line+=ch}
+  if(line)lines.push(line);
+  lines.forEach((l,i)=>x.fillText(l.trim(),cx,y+i*lh));return lines.length;
+}
+function drawCard(){
+  const d=cardData,c=document.createElement('canvas');c.width=1080;c.height=1920;
+  const x=c.getContext('2d'),F="'Jua','Apple SD Gothic Neo','Noto Sans KR',sans-serif",INK='#34415a',SUB='#66768f';
+  x.fillStyle='#e9f2fa';x.fillRect(0,0,1080,1920);
+  drawBear(x,540,330,2.6);
+  x.textAlign='center';x.fillStyle=SUB;x.font='52px '+F;x.fillText('곰곰 사주',540,560);
+  x.fillStyle=INK;x.font='76px '+F;x.fillText('나는 '+d.dgName+' 일간이곰',540,670);
+  x.fillStyle=SUB;x.font='42px '+F;wrap(x,d.dgText,540,760,900,60);
+  const W=210,G=30,X0=75,Y=920,H=430;
+  d.P.forEach((p,i)=>{
+    const X=X0+i*(W+G),me=i===1;
+    x.fillStyle='#fff';rr(x,X,Y,W,H,36);x.fill();x.lineWidth=6;x.strokeStyle=me?'#2f7fc8':'#d3e0ee';x.stroke();
+    x.fillStyle=SUB;x.font='36px '+F;x.fillText(p[0]+(me?'(나)':''),X+W/2,Y+62);
+    if(!p[1]){x.font='110px '+F;x.fillText('?',X+W/2,Y+280);return}
+    [[p[1],GAN,GK,GE],[p[2],ZHI,ZK,ZE]].forEach(([ch,A,K,E],j)=>{
+      const k=A.indexOf(ch),oy=Y+80+j*170;
+      x.fillStyle=INK;x.font='104px '+F;x.fillText(ch,X+W/2,oy+105);
+      x.fillStyle=SUB;x.font='30px '+F;x.fillText(K[k]+EK[E[k]],X+W/2,oy+145);
+      x.fillStyle=EC[E[k]];rr(x,X+40,oy+158,W-80,8,4);x.fill();
+    });
+  });
+  const total=d.known?8:6;let y=1430;
+  Object.keys(d.cnt).forEach(e=>{
+    x.textAlign='left';x.fillStyle=INK;x.font='40px '+F;x.fillText(e+' '+EN[e],110,y+14);
+    x.fillStyle='#fff';rr(x,300,y-14,600,32,16);x.fill();
+    if(d.cnt[e]){x.fillStyle=EC[e];rr(x,300,y-14,Math.max(32,600*d.cnt[e]/total),32,16);x.fill()}
+    x.textAlign='right';x.fillStyle=INK;x.fillText(String(d.cnt[e]),970,y+14);y+=72;
+  });
+  x.textAlign='center';x.fillStyle=INK;x.font='50px '+F;x.fillText('너도 사주 보러 가보자곰!',540,1810);
+  if(SITE){x.fillStyle=SUB;x.font='36px '+F;x.fillText(SITE,540,1870)}
+  return c;
+}
+async function shareCard(){
+  if(!cardData)return;
+  const btn=$('shareBtn');btn.disabled=true;
+  try{
+    try{await document.fonts.load("76px 'Jua'")}catch(e){}
+    const blob=await new Promise(r=>drawCard().toBlob(r,'image/png'));
+    const file=new File([blob],'gomgom-saju.png',{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      try{await navigator.share({files:[file]});return}catch(e){if(e.name==='AbortError')return}
+    }
+    const url=URL.createObjectURL(blob);
+    $('shareImg').src=url;$('shareDl').href=url;$('sharePrev').hidden=false;
+    $('sharePrev').scrollIntoView({block:'nearest'});
+  }finally{btn.disabled=false}
+}
+$('shareBtn').addEventListener('click',shareCard);
+$('go').addEventListener('click',run);
+['y','m','d'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter')run()}));
+</script>
+</body>
+</html>

@@ -323,3 +323,5 @@ textarea{width:100%;font:inherit;font-size:17px;color:var(--ink);background:var(
 
 .chatlog{display:flex;flex-direction:column;gap:8px}
 .chatlog[hidden]{display:none}
+
+.retry{margin-top:8px;font-size:16px;padding:10px}

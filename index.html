@@ -696,12 +696,14 @@ async function pay(item){ // item = {id, name, price}
   return false;
 }
 let TCODE='';try{TCODE=localStorage.getItem('gomCode')||''}catch(e){}
-async function askAI(prompt,kind){
+async function askAI(prompt,kind,tries){
+  tries=tries||0;
   if(!PAY_ON&&!TCODE)throw{code:'not_granted',message:'곰 상담소 위쪽에 테스터 코드를 먼저 넣어줘곰'};
   let r,j={};
   try{r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:TCODE,kind:kind||'report',prompt})});j=await r.json().catch(()=>({}))}
   catch(e){throw{code:'net',message:'인터넷 연결을 확인해 줘곰'}}
   if(r.status===504)throw{code:'fail',message:'곰이 너무 오래 걸려서 멈췄어곰. 다시 해보자곰'};
+  if(r.status===429&&j.code==='rate_limited'&&tries<5){const w=(j.retryAfter||15)*1000;const m=$('payMsg');const old=m.textContent;m.textContent='곰이 잠깐 숨 고르는 중이야곰… 자동으로 이어서 쓸게곰';await new Promise(res=>setTimeout(res,w));if(m.textContent.startsWith('곰이 잠깐 숨'))m.textContent=old;return askAI(prompt,kind,tries+1)}
   if(!r.ok||!j.ok){if(r.status===401){TCODE='';try{localStorage.removeItem('gomCode')}catch(e){}showCode(true)}throw{code:j.code||'fail',message:j.error}}
   return j.data;
 }
@@ -829,10 +831,12 @@ async function makeReport(btn,R){
   const prog=el('div','prog');prog.innerHTML='<i></i><span></span>';box.append(prog);
   const slots=R.chapters.map((c,i)=>{const sct=el('section','chap');sct.id='ch'+i;sct.append(el('div','chn',(i+1)+'장'),el('h4',null,c.t),el('p','muted wait','곰이 쓰는 중이야곰…'));box.append(sct);return sct});
   box.scrollIntoView({behavior:'smooth',block:'start'});
-  const n=R.chapters.length,groups=[[]];for(let i=0;i<n;i+=2)groups.push(Array.from({length:Math.min(2,n-i)},(_,k)=>i+k));const tocList=R.chapters.map((c,i)=>(i+1)+'.'+c.t).join(' / ');let fail=0;
+  const n=R.chapters.length,groups=[[]];{let cur=[];for(let i=0;i<n;i++){if(R.chapters[i].k==='years'||R.chapters[i].k==='months'){groups.push([i]);continue}cur.push(i);if(cur.length===2){groups.push(cur);cur=[]}}if(cur.length)groups.push(cur)}const tocList=R.chapters.map((c,i)=>(i+1)+'.'+c.t).join(' / ');let fail=0;
   let doneN=0;const setProg=()=>{prog.querySelector('i').style.width=(doneN/groups.length*100+8)+'%';prog.querySelector('span').textContent=(tone==='fire'?'불곰이 혀 차면서 사주 보는 중 (':'곰이 보고서를 쓰는 중이야곰 (')+doneN+'/'+groups.length+' 완료)'};setProg();
   const curTone=tone;
-  await Promise.all(groups.map(async(idx,gi)=>{
+  let hdrRetry=null;
+  const runGroup=async(idx,gi,retry)=>{
+    idx.forEach(i=>{const w=slots[i].querySelector('.wait');if(w)w.textContent=tone==='fire'?'불곰이 쓰는 중…':'곰이 쓰는 중이야곰…'});
     const kinds=idx.map(i=>R.chapters[i].k);
     const spec=idx.length?idx.map(i=>(i+1)+'장 「'+R.chapters[i].t+'」: '+R.chapters[i].g).join('\n'):'이번에는 장 본문은 쓰지 말고, 보고서 맨 위에 들어갈 결론, 요약, 판정, 순위만 써.';
     const prompt=base()+'\n\n[보고서] '+R.kind+' 프리미엄 보고서야. 전체 목차: '+tocList+'\n이번에는 아래 장만 써. 다른 장에서 다룰 내용은 반복하지 마.\n'+spec+
@@ -842,18 +846,23 @@ async function makeReport(btn,R){
       (kinds.includes('years')?',"연도별":["10개. 위 연도 순서대로 각 해의 한 줄 풀이"]':'')+(kinds.includes('months')?',"월별":["12개. 위 달 순서대로 각 달의 한 줄 풀이"]':'')+'}';
     let r=null;
     for(let t=0;t<1&&!r;t++){try{r=await askAI(prompt)}catch(e){if(e&&['not_granted','unavailable','rate_limited','net','setup'].includes(e.code)){m.textContent=errTxt(e);break}}}
-    doneN++;setProg();
-    if(!r){fail++;idx.forEach(i=>{const w=slots[i].querySelector('.wait');if(w)w.textContent='이 장을 가져오지 못했어곰.'});return}
+    if(!retry){doneN++;setProg()}
+    if(!r){if(!retry)fail++;const again=()=>{const b=el('button','btn ghost retry','이 부분 다시 써 줘곰');b.type='button';b.addEventListener('click',async()=>{b.disabled=true;b.textContent='곰이 다시 쓰는 중이야곰…';const ok=await runGroup(idx,gi,true);if(!ok){b.disabled=false;b.textContent='이 부분 다시 써 줘곰'}else{b.remove();if(!idx.length)hdrRetry=null;if(!box.querySelector('.retry'))m.textContent='다 채웠어곰!'}});return b};
+      if(idx.length)idx.forEach((i,k)=>{const w=slots[i].querySelector('.wait');if(w){w.textContent='이 장을 가져오지 못했어곰.';if(k===0&&!slots[i].querySelector('.retry'))slots[i].append(again())}});
+      else if(!hdrRetry){hdrRetry=again();toc.before(hdrRetry)}
+      return false}
     if(gi===0){MEMO[R.key]={title:R.title,line:[r.온도!==undefined?'궁합 온도 '+r.온도+'도':'',r.한줄||'',...(Array.isArray(r.요약)?r.요약:[]),...(Array.isArray(r.판정)?r.판정.map(x=>x.항목+' '+x.결과):[]),Array.isArray(r.추천)&&r.추천.length?'추천 순위: '+r.추천.join(', '):'',Array.isArray(r.비추천)&&r.비추천.length?'비추천: '+r.비추천.join(', '):'',Array.isArray(r.전공)&&r.전공.length?'추천 전공 순위: '+r.전공.join(', '):'',r.적기?'적기 '+r.적기:''].filter(Boolean).join(' / ').slice(0,1400)};
       if(r.한줄)one.textContent=r.한줄;
       if(R.temp&&!isNaN(+r.온도)){temp.hidden=false;temp.innerHTML='<b></b><span>궁합 온도</span>';temp.querySelector('b').textContent=Math.max(0,Math.min(100,Math.round(+r.온도)))+'℃'}
       if(Array.isArray(r.요약)&&r.요약.length){r.요약.slice(0,4).forEach(x=>sum.querySelector('ul').append(el('li',null,x)));sum.hidden=false}
       const vb=verdictBox(r,R.kind);if(vb)sum.after(vb)}
     (Array.isArray(r.장)?r.장:[]).forEach((ch,n)=>{let i=(+ch.번호)-1;if(!idx.includes(i))i=idx[n];if(i===undefined)return;fillChap(slots[i],ch,R.chapters[i],r,R)});
-    idx.forEach(i=>{const w=slots[i].querySelector('.wait');if(w)w.textContent='이 장은 곰이 빠뜨렸어곰.'});
-  }));
+    idx.forEach(i=>{const w=slots[i].querySelector('.wait');if(w)w.textContent='이 장은 곰이 빠뜨렸어곰.';const rb=slots[i].querySelector('.retry');if(rb&&!w)rb.remove()});
+    return true;
+  };
+  let next=0;await Promise.all([0,1].map(async()=>{while(next<groups.length){const gi=next++;await runGroup(groups[gi],gi)}}));
   prog.remove();BUSY.delete(R.key);syncBuy();
-  if(fail<groups.length){if(R.done)R.done();if(fail)m.textContent='일부 장을 가져오지 못했어곰. 실제 서비스에서는 다시 받을 수 있게 할게곰.'}
+  if(fail<groups.length){if(R.done)R.done();if(fail)m.textContent='일부 장을 가져오지 못했어곰. 그 장의 "다시 써 줘곰" 버튼을 눌러 줘곰.'}
   else if(!m.textContent)m.textContent=errTxt();
 }
 function fillChap(sct,ch,c,r,R){

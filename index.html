@@ -829,16 +829,16 @@ async function makeReport(btn,R){
   const prog=el('div','prog');prog.innerHTML='<i></i><span></span>';box.append(prog);
   const slots=R.chapters.map((c,i)=>{const sct=el('section','chap');sct.id='ch'+i;sct.append(el('div','chn',(i+1)+'장'),el('h4',null,c.t),el('p','muted wait','곰이 쓰는 중이야곰…'));box.append(sct);return sct});
   box.scrollIntoView({behavior:'smooth',block:'start'});
-  const n=R.chapters.length,sz=Math.ceil(n/3),groups=[0,1,2].map(g=>Array.from({length:n},(_,i)=>i).slice(g*sz,(g+1)*sz)).filter(g=>g.length),tocList=R.chapters.map((c,i)=>(i+1)+'.'+c.t).join(' / ');let fail=0;
+  const n=R.chapters.length,groups=[[]];for(let i=0;i<n;i+=2)groups.push(Array.from({length:Math.min(2,n-i)},(_,k)=>i+k));const tocList=R.chapters.map((c,i)=>(i+1)+'.'+c.t).join(' / ');let fail=0;
   let doneN=0;const setProg=()=>{prog.querySelector('i').style.width=(doneN/groups.length*100+8)+'%';prog.querySelector('span').textContent=(tone==='fire'?'불곰이 혀 차면서 사주 보는 중 (':'곰이 보고서를 쓰는 중이야곰 (')+doneN+'/'+groups.length+' 완료)'};setProg();
   const curTone=tone;
   await Promise.all(groups.map(async(idx,gi)=>{
     const kinds=idx.map(i=>R.chapters[i].k);
-    const spec=idx.map(i=>(i+1)+'장 「'+R.chapters[i].t+'」: '+R.chapters[i].g).join('\n');
+    const spec=idx.length?idx.map(i=>(i+1)+'장 「'+R.chapters[i].t+'」: '+R.chapters[i].g).join('\n'):'이번에는 장 본문은 쓰지 말고, 보고서 맨 위에 들어갈 결론, 요약, 판정, 순위만 써.';
     const prompt=base()+'\n\n[보고서] '+R.kind+' 프리미엄 보고서야. 전체 목차: '+tocList+'\n이번에는 아래 장만 써. 다른 장에서 다룰 내용은 반복하지 마.\n'+spec+
       '\n\n'+R.facts+'\n\n'+R.ctx+
-      '\n\n형식: {'+(gi===0?(R.temp?'"온도":0,':'')+'"한줄":"이 보고서의 결론을 한 문장으로 딱 잘라서","요약":["핵심 결론 3줄. 각 줄은 판정이 분명해야 해"],'+VERDICT[R.kind]+',':'')+
-      '"장":[{"번호":장번호,"근거":["이 장의 근거가 된 사주 요소 1~3개. 예: 일지 정재, 월지 도화살"],"내용":"5~7문장. 첫 문장은 이 장의 결론을 딱 잘라 말해. 2문단으로 나누고 문단 사이는 줄바꿈","곰":"이 장을 한 줄로 정리"}]'+
+      '\n\n형식: {'+(gi===0?(R.temp?'"온도":0,':'')+'"한줄":"이 보고서의 결론을 한 문장으로 딱 잘라서","요약":["핵심 결론 3줄. 각 줄은 판정이 분명해야 해"],'+VERDICT[R.kind]+(idx.length?',':''):'')+
+      (idx.length?'"장":[{"번호":장번호,"근거":["이 장의 근거가 된 사주 요소 1~3개. 예: 일지 정재, 월지 도화살"],"내용":"5~7문장. 첫 문장은 이 장의 결론을 딱 잘라 말해. 2문단으로 나누고 문단 사이는 줄바꿈","곰":"이 장을 한 줄로 정리"}]':'')+
       (kinds.includes('years')?',"연도별":["10개. 위 연도 순서대로 각 해의 한 줄 풀이"]':'')+(kinds.includes('months')?',"월별":["12개. 위 달 순서대로 각 달의 한 줄 풀이"]':'')+'}';
     let r=null;
     for(let t=0;t<1&&!r;t++){try{r=await askAI(prompt)}catch(e){if(e&&['not_granted','unavailable','rate_limited','net','setup'].includes(e.code)){m.textContent=errTxt(e);break}}}

@@ -75,7 +75,8 @@ module.exports = async (req, res) => {
     const j = await r.json();
     const text = (j.content || []).map(c => c.text || '').join('');
     try { return res.status(200).json({ ok: true, data: parseJSON(text) }); }
-    catch (e) { console.error('json fail', j.stop_reason, (j.usage && j.usage.output_tokens), text.slice(-200)); return res.status(502).json({ code: 'fail', error: '곰의 글이 중간에 끊겼어곰. 다시 해보자곰' }); }
-  } catch (e) { console.error('ai fail', e.message); }
+    catch (e) { console.error('json fail', j.stop_reason, (j.usage && j.usage.output_tokens), text.slice(-200));
+      return res.status(502).json({ code: 'fail', error: j.stop_reason === 'max_tokens' ? '글이 너무 길어서 끊겼어곰' : '곰의 글 형식이 깨졌어곰' }); }
+  } catch (e) { console.error('ai fail', e.message); return res.status(502).json({ code: 'fail', error: e.name === 'AbortError' ? '곰이 너무 오래 걸렸어곰' : '곰 서버 연결이 끊겼어곰' }); }
   return res.status(502).json({ code: 'fail', error: '곰이 글을 가져오지 못했어곰' });
 };

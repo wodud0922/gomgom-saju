@@ -845,10 +845,11 @@ async function makeReport(btn,R){
       (idx.length?'"장":[{"번호":장번호,"근거":["이 장의 근거가 된 사주 요소 1~3개. 예: 일지 정재, 월지 도화살"],"내용":"5~7문장. 첫 문장은 이 장의 결론을 딱 잘라 말해. 2문단으로 나누고 문단 사이는 줄바꿈","곰":"이 장을 한 줄로 정리"}]':'')+
       (kinds.includes('years')?',"연도별":["10개. 위 연도 순서대로 각 해의 한 줄 풀이"]':'')+(kinds.includes('months')?',"월별":["12개. 위 달 순서대로 각 달의 한 줄 풀이"]':'')+'}';
     let r=null;
-    for(let t=0;t<1&&!r;t++){try{r=await askAI(prompt)}catch(e){if(e&&['not_granted','unavailable','rate_limited','net','setup'].includes(e.code)){m.textContent=errTxt(e);break}}}
+    let why='';
+    for(let t=0;t<2&&!r;t++){try{r=await askAI(prompt)}catch(e){why=(e&&e.message)||'알 수 없는 문제';if(e&&['not_granted','unavailable','setup'].includes(e.code)){m.textContent=errTxt(e);break}if(t===0)await new Promise(res=>setTimeout(res,2000))}}
     if(!retry){doneN++;setProg()}
     if(!r){if(!retry)fail++;const again=()=>{const b=el('button','btn ghost retry','이 부분 다시 써 줘곰');b.type='button';b.addEventListener('click',async()=>{b.disabled=true;b.textContent='곰이 다시 쓰는 중이야곰…';const ok=await runGroup(idx,gi,true);if(!ok){b.disabled=false;b.textContent='이 부분 다시 써 줘곰'}else{b.remove();if(!idx.length)hdrRetry=null;if(!box.querySelector('.retry'))m.textContent='다 채웠어곰!'}});return b};
-      if(idx.length)idx.forEach((i,k)=>{const w=slots[i].querySelector('.wait');if(w){w.textContent='이 장을 가져오지 못했어곰.';if(k===0&&!slots[i].querySelector('.retry'))slots[i].append(again())}});
+      if(idx.length)idx.forEach((i,k)=>{const w=slots[i].querySelector('.wait');if(w){w.textContent='이 장을 가져오지 못했어곰.'+(why?' (이유: '+why+')':'');if(k===0&&!slots[i].querySelector('.retry'))slots[i].append(again())}});
       else if(!hdrRetry){hdrRetry=again();toc.before(hdrRetry)}
       return false}
     if(gi===0){MEMO[R.key]={title:R.title,line:[r.온도!==undefined?'궁합 온도 '+r.온도+'도':'',r.한줄||'',...(Array.isArray(r.요약)?r.요약:[]),...(Array.isArray(r.판정)?r.판정.map(x=>x.항목+' '+x.결과):[]),Array.isArray(r.추천)&&r.추천.length?'추천 순위: '+r.추천.join(', '):'',Array.isArray(r.비추천)&&r.비추천.length?'비추천: '+r.비추천.join(', '):'',Array.isArray(r.전공)&&r.전공.length?'추천 전공 순위: '+r.전공.join(', '):'',r.적기?'적기 '+r.적기:''].filter(Boolean).join(' / ').slice(0,1400)};

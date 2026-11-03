@@ -45,7 +45,7 @@ module.exports = async (req, res) => {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST', signal: ctl.signal,
       headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: MODEL, max_tokens: kind === 'ask' ? 1200 : 4500, messages: [{ role: 'user', content: prompt }] }),
+      body: JSON.stringify({ model: MODEL, max_tokens: kind === 'ask' ? 2000 : 8000, messages: [{ role: 'user', content: prompt }] }),
     });
     clearTimeout(timer);
     if (r.status === 429 || r.status === 529) return res.status(429).json({ code: 'rate_limited', error: '곰이 잠깐 쉬는 중이야곰. 1분 뒤에 다시 해보자곰' });

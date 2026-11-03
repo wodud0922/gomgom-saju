@@ -13,10 +13,30 @@ function count(key) {
   if (hits.size > 5000) hits.clear();
   const n = (hits.get(k) || 0) + 1; hits.set(k, n); return n;
 }
+// AI가 쓴 JSON이 살짝 깨져도 최대한 복구해서 읽기
+function repairJSON(t) {
+  let out = '', inStr = false, esc = false;
+  for (const ch of t) {
+    if (inStr) {
+      if (esc) { out += ch; esc = false; continue; }
+      if (ch === '\\') { out += ch; esc = true; continue; }
+      if (ch === '"') { out += ch; inStr = false; continue; }
+      if (ch === '\n') { out += '\\n'; continue; }
+      if (ch === '\r') continue;
+      if (ch === '\t') { out += ' '; continue; }
+      out += ch;
+    } else {
+      if (ch === '"') inStr = true;
+      out += ch;
+    }
+  }
+  return out.replace(/,\s*([}\]])/g, '$1');
+}
 function parseJSON(text) {
   const a = text.indexOf('{'), b = text.lastIndexOf('}');
   if (a < 0 || b <= a) throw new Error('no json');
-  return JSON.parse(text.slice(a, b + 1));
+  const body = text.slice(a, b + 1);
+  try { return JSON.parse(body); } catch (e) { return JSON.parse(repairJSON(body)); }
 }
 
 module.exports = async (req, res) => {
@@ -45,17 +65,17 @@ module.exports = async (req, res) => {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST', signal: ctl.signal,
       headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: MODEL, max_tokens: kind === 'ask' ? 2000 : 8000, messages: [{ role: 'user', content: prompt }] }),
+      body: JSON.stringify({ model: MODEL, max_tokens: kind === 'ask' ? 2500 : 6000, messages: [{ role: 'user', content: prompt }] }),
     });
     clearTimeout(timer);
-    if (r.status === 429 || r.status === 529) return res.status(429).json({ code: 'rate_limited', error: '곰이 잠깐 쉬는 중이야곰. 1분 뒤에 다시 해보자곰' });
+    if (r.status === 429 || r.status === 529) { const ra = Math.min(60, Math.max(5, parseInt(r.headers.get('retry-after') || '15', 10) || 15)); return res.status(429).json({ code: 'rate_limited', retryAfter: ra, error: '곰이 잠깐 숨 고르는 중이야곰' }); }
     if (r.status === 401) return res.status(500).json({ code: 'setup', error: '서버의 API 키가 맞지 않아곰 (관리자 확인 필요)' });
     if (r.status === 400) { const t = await r.text(); console.error('anthropic 400', t.slice(0, 300)); return res.status(500).json({ code: 'setup', error: /credit/i.test(t) ? '콘솔 크레딧이 부족해곰 (관리자 충전 필요)' : '곰에게 보낸 요청이 이상해곰' }); }
     if (!r.ok) { console.error('anthropic', r.status, (await r.text()).slice(0, 300)); return res.status(502).json({ code: 'fail', error: '곰이 글을 가져오지 못했어곰. 다시 해보자곰' }); }
     const j = await r.json();
     const text = (j.content || []).map(c => c.text || '').join('');
     try { return res.status(200).json({ ok: true, data: parseJSON(text) }); }
-    catch (e) { console.error('json fail', j.stop_reason, text.slice(-200)); return res.status(502).json({ code: 'fail', error: '곰의 글이 중간에 끊겼어곰. 다시 해보자곰' }); }
+    catch (e) { console.error('json fail', j.stop_reason, (j.usage && j.usage.output_tokens), text.slice(-200)); return res.status(502).json({ code: 'fail', error: '곰의 글이 중간에 끊겼어곰. 다시 해보자곰' }); }
   } catch (e) { console.error('ai fail', e.message); }
   return res.status(502).json({ code: 'fail', error: '곰이 글을 가져오지 못했어곰' });
 };

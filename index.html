@@ -701,6 +701,7 @@ async function askAI(prompt,kind){
   let r,j={};
   try{r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:TCODE,kind:kind||'report',prompt})});j=await r.json().catch(()=>({}))}
   catch(e){throw{code:'net',message:'인터넷 연결을 확인해 줘곰'}}
+  if(r.status===504)throw{code:'fail',message:'곰이 너무 오래 걸려서 멈췄어곰. 다시 해보자곰'};
   if(!r.ok||!j.ok){if(r.status===401){TCODE='';try{localStorage.removeItem('gomCode')}catch(e){}showCode(true)}throw{code:j.code||'fail',message:j.error}}
   return j.data;
 }
@@ -829,18 +830,20 @@ async function makeReport(btn,R){
   const slots=R.chapters.map((c,i)=>{const sct=el('section','chap');sct.id='ch'+i;sct.append(el('div','chn',(i+1)+'장'),el('h4',null,c.t),el('p','muted wait','곰이 쓰는 중이야곰…'));box.append(sct);return sct});
   box.scrollIntoView({behavior:'smooth',block:'start'});
   const n=R.chapters.length,sz=Math.ceil(n/3),groups=[0,1,2].map(g=>Array.from({length:n},(_,i)=>i).slice(g*sz,(g+1)*sz)).filter(g=>g.length),tocList=R.chapters.map((c,i)=>(i+1)+'.'+c.t).join(' / ');let fail=0;
-  for(let gi=0;gi<groups.length;gi++){
-    const idx=groups[gi];prog.querySelector('i').style.width=(gi/groups.length*100+8)+'%';prog.querySelector('span').textContent=(tone==='fire'?'불곰이 혀 차면서 사주 보는 중 (':'곰이 보고서를 쓰는 중이야곰 (')+(gi+1)+'/'+groups.length+')';
+  let doneN=0;const setProg=()=>{prog.querySelector('i').style.width=(doneN/groups.length*100+8)+'%';prog.querySelector('span').textContent=(tone==='fire'?'불곰이 혀 차면서 사주 보는 중 (':'곰이 보고서를 쓰는 중이야곰 (')+doneN+'/'+groups.length+' 완료)'};setProg();
+  const curTone=tone;
+  await Promise.all(groups.map(async(idx,gi)=>{
     const kinds=idx.map(i=>R.chapters[i].k);
     const spec=idx.map(i=>(i+1)+'장 「'+R.chapters[i].t+'」: '+R.chapters[i].g).join('\n');
     const prompt=base()+'\n\n[보고서] '+R.kind+' 프리미엄 보고서야. 전체 목차: '+tocList+'\n이번에는 아래 장만 써. 다른 장에서 다룰 내용은 반복하지 마.\n'+spec+
       '\n\n'+R.facts+'\n\n'+R.ctx+
       '\n\n형식: {'+(gi===0?(R.temp?'"온도":0,':'')+'"한줄":"이 보고서의 결론을 한 문장으로 딱 잘라서","요약":["핵심 결론 3줄. 각 줄은 판정이 분명해야 해"],'+VERDICT[R.kind]+',':'')+
-      '"장":[{"번호":장번호,"근거":["이 장의 근거가 된 사주 요소 1~3개. 예: 일지 정재, 월지 도화살"],"내용":"7~10문장. 첫 문장은 이 장의 결론을 딱 잘라 말해. 2~3문단으로 나누고 문단 사이는 줄바꿈","곰":"이 장을 한 줄로 정리"}]'+
+      '"장":[{"번호":장번호,"근거":["이 장의 근거가 된 사주 요소 1~3개. 예: 일지 정재, 월지 도화살"],"내용":"5~7문장. 첫 문장은 이 장의 결론을 딱 잘라 말해. 2문단으로 나누고 문단 사이는 줄바꿈","곰":"이 장을 한 줄로 정리"}]'+
       (kinds.includes('years')?',"연도별":["10개. 위 연도 순서대로 각 해의 한 줄 풀이"]':'')+(kinds.includes('months')?',"월별":["12개. 위 달 순서대로 각 달의 한 줄 풀이"]':'')+'}';
     let r=null;
-    for(let t=0;t<2&&!r;t++){try{r=await askAI(prompt)}catch(e){if(e&&['not_granted','unavailable','rate_limited','net','setup'].includes(e.code)){m.textContent=errTxt(e);break}}}
-    if(!r){fail++;idx.forEach(i=>{const w=slots[i].querySelector('.wait');if(w)w.textContent='이 장을 가져오지 못했어곰.'});continue}
+    for(let t=0;t<1&&!r;t++){try{r=await askAI(prompt)}catch(e){if(e&&['not_granted','unavailable','rate_limited','net','setup'].includes(e.code)){m.textContent=errTxt(e);break}}}
+    doneN++;setProg();
+    if(!r){fail++;idx.forEach(i=>{const w=slots[i].querySelector('.wait');if(w)w.textContent='이 장을 가져오지 못했어곰.'});return}
     if(gi===0){MEMO[R.key]={title:R.title,line:[r.온도!==undefined?'궁합 온도 '+r.온도+'도':'',r.한줄||'',...(Array.isArray(r.요약)?r.요약:[]),...(Array.isArray(r.판정)?r.판정.map(x=>x.항목+' '+x.결과):[]),Array.isArray(r.추천)&&r.추천.length?'추천 순위: '+r.추천.join(', '):'',Array.isArray(r.비추천)&&r.비추천.length?'비추천: '+r.비추천.join(', '):'',Array.isArray(r.전공)&&r.전공.length?'추천 전공 순위: '+r.전공.join(', '):'',r.적기?'적기 '+r.적기:''].filter(Boolean).join(' / ').slice(0,1400)};
       if(r.한줄)one.textContent=r.한줄;
       if(R.temp&&!isNaN(+r.온도)){temp.hidden=false;temp.innerHTML='<b></b><span>궁합 온도</span>';temp.querySelector('b').textContent=Math.max(0,Math.min(100,Math.round(+r.온도)))+'℃'}
@@ -848,7 +851,7 @@ async function makeReport(btn,R){
       const vb=verdictBox(r,R.kind);if(vb)sum.after(vb)}
     (Array.isArray(r.장)?r.장:[]).forEach((ch,n)=>{let i=(+ch.번호)-1;if(!idx.includes(i))i=idx[n];if(i===undefined)return;fillChap(slots[i],ch,R.chapters[i],r,R)});
     idx.forEach(i=>{const w=slots[i].querySelector('.wait');if(w)w.textContent='이 장은 곰이 빠뜨렸어곰.'});
-  }
+  }));
   prog.remove();BUSY.delete(R.key);syncBuy();
   if(fail<groups.length){if(R.done)R.done();if(fail)m.textContent='일부 장을 가져오지 못했어곰. 실제 서비스에서는 다시 받을 수 있게 할게곰.'}
   else if(!m.textContent)m.textContent=errTxt();

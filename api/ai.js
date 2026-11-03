@@ -60,22 +60,33 @@ module.exports = async (req, res) => {
     return res.status(429).json({ code: 'rate_limited', error: '오늘 쓸 수 있는 만큼 다 썼어곰. 내일 다시 와줘곰' });
 
   // 재시도 없음: 실패해도 같은 글을 두 번 쓰지 않게 (비용 절약)
-  try {
+  // Sonnet 5.5는 기본으로 '속생각'을 길게 해서 글이 잘리고 느려짐 → 미리 생각 끄고, 생각 깊이 중간
+  const base = { model: MODEL, max_tokens: kind === 'ask' ? 4000 : 12000, messages: [{ role: 'user', content: prompt }] };
+  const tuned = Object.assign({}, base, { thinking: { type: 'between_tools' }, output_config: { effort: process.env.CLAUDE_EFFORT || 'medium' } });
+  const call = (body) => {
     const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 280000);
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+    return fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST', signal: ctl.signal,
       headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: MODEL, max_tokens: kind === 'ask' ? 2500 : 6000, messages: [{ role: 'user', content: prompt }] }),
-    });
-    clearTimeout(timer);
+      body: JSON.stringify(body),
+    }).finally(() => clearTimeout(timer));
+  };
+  try {
+    let r = await call(tuned);
+    if (r.status === 400) {
+      const t = await r.text();
+      // 다른 모델이라 이 설정을 모르면 기본 설정으로 한 번만 다시 (거절된 요청은 과금 없음)
+      if (/thinking|effort|output_config/i.test(t)) { console.error('fallback to base', t.slice(0, 200)); r = await call(base); }
+      else { console.error('anthropic 400', t.slice(0, 300)); return res.status(500).json({ code: 'setup', error: /credit/i.test(t) ? '콘솔 크레딧이 부족해곰 (관리자 충전 필요)' : '곰에게 보낸 요청이 이상해곰' }); }
+    }
     if (r.status === 429 || r.status === 529) { const ra = Math.min(60, Math.max(5, parseInt(r.headers.get('retry-after') || '15', 10) || 15)); return res.status(429).json({ code: 'rate_limited', retryAfter: ra, error: '곰이 잠깐 숨 고르는 중이야곰' }); }
     if (r.status === 401) return res.status(500).json({ code: 'setup', error: '서버의 API 키가 맞지 않아곰 (관리자 확인 필요)' });
     if (r.status === 400) { const t = await r.text(); console.error('anthropic 400', t.slice(0, 300)); return res.status(500).json({ code: 'setup', error: /credit/i.test(t) ? '콘솔 크레딧이 부족해곰 (관리자 충전 필요)' : '곰에게 보낸 요청이 이상해곰' }); }
     if (!r.ok) { console.error('anthropic', r.status, (await r.text()).slice(0, 300)); return res.status(502).json({ code: 'fail', error: '곰이 글을 가져오지 못했어곰. 다시 해보자곰' }); }
     const j = await r.json();
-    const text = (j.content || []).map(c => c.text || '').join('');
+    const text = (j.content || []).filter(c => c.type === 'text').map(c => c.text || '').join('');
     try { return res.status(200).json({ ok: true, data: parseJSON(text) }); }
-    catch (e) { console.error('json fail', j.stop_reason, (j.usage && j.usage.output_tokens), text.slice(-200));
+    catch (e) { console.error('json fail', j.stop_reason, JSON.stringify(j.usage || {}), text.slice(-200));
       return res.status(502).json({ code: 'fail', error: j.stop_reason === 'max_tokens' ? '글이 너무 길어서 끊겼어곰' : '곰의 글 형식이 깨졌어곰' }); }
   } catch (e) { console.error('ai fail', e.message); return res.status(502).json({ code: 'fail', error: e.name === 'AbortError' ? '곰이 너무 오래 걸렸어곰' : '곰 서버 연결이 끊겼어곰' }); }
   return res.status(502).json({ code: 'fail', error: '곰이 글을 가져오지 못했어곰' });

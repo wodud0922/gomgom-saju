@@ -1,7 +1,7 @@
 // 곰 상담소 AI 서버 (지인 테스트용)
 // Vercel 환경변수: ANTHROPIC_API_KEY, TESTER_CODES (쉼표로 여러 개 가능)
-// 기본은 Opus 5.5. Vercel 환경변수 CLAUDE_MODEL에 claude-sonnet-5-5를 넣으면 더 저렴하게 바꿀 수 있어요
-const MODEL = process.env.CLAUDE_MODEL || 'claude-opus-5-5';
+// 기본은 Sonnet 5.5 (빠르고 Opus의 절반 가격). 더 깊은 글이 필요하면 Vercel 환경변수 CLAUDE_MODEL에 claude-opus-5-5
+const MODEL = process.env.CLAUDE_MODEL || 'claude-sonnet-5-5';
 const LIMIT_ON = false;
 const LIMIT = { report: 18, ask: 30 }; // 하루: 보고서 6개(보고서 1개 = 3번 호출), 질문 30개
 const MAX_PROMPT = 16000;               // 글자 수
@@ -39,19 +39,23 @@ module.exports = async (req, res) => {
   if (LIMIT_ON && count(kind + ':' + ip + ':' + code) > LIMIT[kind])
     return res.status(429).json({ code: 'rate_limited', error: '오늘 쓸 수 있는 만큼 다 썼어곰. 내일 다시 와줘곰' });
 
-  for (let t = 0; t < 2; t++) {
-    try {
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-        body: JSON.stringify({ model: MODEL, max_tokens: kind === 'ask' ? 1500 : 6000, messages: [{ role: 'user', content: prompt }] }),
-      });
-      if (r.status === 429 || r.status === 529) return res.status(429).json({ code: 'rate_limited', error: '곰이 잠깐 쉬는 중이야곰' });
-      if (!r.ok) { console.error('anthropic', r.status, (await r.text()).slice(0, 300)); continue; }
-      const j = await r.json();
-      const text = (j.content || []).map(c => c.text || '').join('');
-      return res.status(200).json({ ok: true, data: parseJSON(text) });
-    } catch (e) { console.error('ai fail', e.message); }
-  }
+  // 재시도 없음: 실패해도 같은 글을 두 번 쓰지 않게 (비용 절약)
+  try {
+    const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 280000);
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', signal: ctl.signal,
+      headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: MODEL, max_tokens: kind === 'ask' ? 1200 : 4500, messages: [{ role: 'user', content: prompt }] }),
+    });
+    clearTimeout(timer);
+    if (r.status === 429 || r.status === 529) return res.status(429).json({ code: 'rate_limited', error: '곰이 잠깐 쉬는 중이야곰. 1분 뒤에 다시 해보자곰' });
+    if (r.status === 401) return res.status(500).json({ code: 'setup', error: '서버의 API 키가 맞지 않아곰 (관리자 확인 필요)' });
+    if (r.status === 400) { const t = await r.text(); console.error('anthropic 400', t.slice(0, 300)); return res.status(500).json({ code: 'setup', error: /credit/i.test(t) ? '콘솔 크레딧이 부족해곰 (관리자 충전 필요)' : '곰에게 보낸 요청이 이상해곰' }); }
+    if (!r.ok) { console.error('anthropic', r.status, (await r.text()).slice(0, 300)); return res.status(502).json({ code: 'fail', error: '곰이 글을 가져오지 못했어곰. 다시 해보자곰' }); }
+    const j = await r.json();
+    const text = (j.content || []).map(c => c.text || '').join('');
+    try { return res.status(200).json({ ok: true, data: parseJSON(text) }); }
+    catch (e) { console.error('json fail', j.stop_reason, text.slice(-200)); return res.status(502).json({ code: 'fail', error: '곰의 글이 중간에 끊겼어곰. 다시 해보자곰' }); }
+  } catch (e) { console.error('ai fail', e.message); }
   return res.status(502).json({ code: 'fail', error: '곰이 글을 가져오지 못했어곰' });
 };

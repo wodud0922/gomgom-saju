@@ -505,3 +505,7 @@ span.ico{font-size:inherit!important;padding:0!important;line-height:0!important
 .qwait p{gap:5px!important;font-size:26px!important;line-height:.6!important;padding:8px 4px 4px!important}
 .qwait i{color:var(--sub)!important}
 .exs .tsaju{background:var(--card)}
+.bb.bear.qwait{display:inline-flex!important;align-items:center;gap:8px;padding:8px 12px!important;width:auto;max-width:none}
+.bb.bear.qwait::before{margin:0!important;width:18px!important;height:18px!important}
+.qwait p{display:flex!important;align-items:center;gap:4px!important;padding:0!important;line-height:1!important;font-size:0!important}
+.qwait i{display:block;width:7px;height:7px;border-radius:50%;background:var(--sub);font-size:0!important}

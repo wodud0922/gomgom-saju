@@ -142,7 +142,9 @@ dialog::backdrop{background:rgba(20,30,45,.45)}
 .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:4px 0 14px}
 .tabs button{font:inherit;font-size:16px;padding:9px 4px;border-radius:14px;border:2px solid var(--line);background:var(--mist);color:var(--ink);cursor:pointer}
 .tabs button[aria-selected=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.seg3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+.seg3{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:14px}
+.seg3 button{grid-column:span 2}
+.seg3 button:nth-child(n+4){grid-column:span 3}
 .seg3 button{font:inherit;font-size:15px;padding:10px 2px;border-radius:14px;border:2px solid var(--line);background:var(--mist);color:var(--ink);cursor:pointer}
 .seg3 button[aria-pressed=true]{border-color:var(--accent);background:var(--card)}
 textarea{width:100%;font:inherit;font-size:17px;color:var(--ink);background:var(--mist);border:2px solid var(--line);border-radius:14px;padding:11px 12px;resize:vertical}
@@ -325,3 +327,6 @@ textarea{width:100%;font:inherit;font-size:17px;color:var(--ink);background:var(
 .chatlog[hidden]{display:none}
 
 .retry{margin-top:8px;font-size:16px;padding:10px}
+
+.elc{color:var(--e)}
+.nowt{display:block;width:max-content;margin-top:3px;font-size:11px;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:0 6px}

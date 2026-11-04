@@ -172,8 +172,9 @@
 </div>
 <p class="tbonus">🎁 어떤 묶음을 사도 <b>타로 1번</b>을 덤으로 줘곰</p><p class="muted" style="font-size:13px;margin:8px 0 0">산 날부터 7일 안에 쓸 수 있어곰. 궁합은 상대 생일이 필요해서 궁합 메뉴에서 보는 게 정확해곰.</p>
 </div>
-<div id="chatBox" hidden>
+<div id="chatBox">
 <div class="qleft">남은 질문 <b id="qleft">0</b>개</div>
+<div id="chatDemo" class="chat demo"></div>
 <div id="chat" class="chat" aria-live="polite"></div>
 <div class="field"><label for="q">곰에게 묻고 싶은 것</label><textarea id="q" maxlength="200" rows="3" placeholder="예: 올해 이직해도 괜찮을까?"></textarea><div class="muted" style="font-size:13px;text-align:right"><span id="qn">0</span>/200</div></div>
 <button class="btn" type="button" id="buyAsk">곰에게 물어보자곰</button>
@@ -182,9 +183,14 @@
 </div>
 <div id="tab-tarot" class="tabp" hidden>
 <div id="tarotForm">
+<div class="qleft">남은 타로 <b id="tleft">0</b>번</div>
 <p class="txt" style="margin-bottom:8px">고민을 떠올리면서 카드 3장을 직접 뽑아 보자곰. 곰이 카드를 읽어 주고, 중간중간 내 사주 기운과 이어지는 이야기도 살짝 알려줘곰.</p>
 <div class="field"><label for="tq">고민을 적어줘곰</label><textarea id="tq" maxlength="200" rows="3" placeholder="예: 이번에 고백하면 잘 될까?"></textarea><div class="muted" style="font-size:13px;text-align:right"><span id="tqn">0</span>/200</div></div>
-<div class="incl"><b>3장 타로 상담</b><ul><li>카드 섞기, 고르기, 뒤집기까지 직접 하는 타로 연출</li><li>지금 상황 · 숨은 마음 · 앞으로의 흐름 3장 풀이</li><li>중간중간 내 사주 기운과 이어지는 사주 한 스푼</li><li>결론, 좋은 시기, 지금 할 일</li><li>🎁 곰 질문 묶음을 사면 타로 1번 덤</li></ul></div>
+<div class="excar" data-ex="tarot"><div class="ex-track">
+<div class="ex-slide"><div class="incl"><b>3장 타로 상담</b><ul><li>진짜 타로 카드 78장 그림 그대로, 내가 직접 고르는 카드</li><li>지금 상황 · 숨은 마음 · 앞으로의 흐름 3장 풀이</li><li>중간중간 내 사주 기운과 이어지는 사주 한 스푼</li><li>결론, 좋은 시기, 지금 할 일</li><li>🎁 곰 질문 묶음을 사면 타로 1번 덤</li></ul></div><div class="ex-jump"><span>👀 결과 미리 보기</span><button type="button">카드 풀이</button><button type="button">결론·할 일</button></div></div>
+<div class="ex-slide exs"><span class="ex-tag">예시 · 미리보기</span><p class="tq1" style="margin:0">“이번에 고백하면 잘 될까?”</p><div class="trow"><div class="tmini"><div class="tfw"><img src="tarot/m19.jpg" alt="태양 · 정방향" loading="lazy"></div></div><div class="ttx"><span class="tpl">1. 지금 상황</span><b class="tnm">태양 · 정방향</b><p><span class="bl">서로 호감이 이미 밖으로 드러나 있는 상태라 분위기는 충분히 무르익었어곰.</span></p><div class="tsaju"><b>🐾 사주 한 스푼</b><p><span class="bl">올해 들어온 기운이 인연 자리를 건드려서 관계가 한 단계 나아가기 좋은 해야곰.</span></p></div></div></div><p class="ex-cap">카드마다 고민에 맞춘 풀이와 내 사주와 이어지는 사주 한 스푼이 붙어곰</p></div>
+<div class="ex-slide exs"><span class="ex-tag">예시 · 미리보기</span><p class="one1 ex-tone" style="margin:0;text-align:center" data-soft="응, 다음 달 안에 마음을 전하면 잘 될 가능성이 커곰." data-fire="다음 달 안에 고백해라. 질질 끌다가 놓치면 그건 순전히 네 탓이다.">응, 다음 달 안에 마음을 전하면 잘 될 가능성이 커곰.</p><div class="ab"><b>🔮 세 장을 이어 보면</b><p><span class="bl">지금 분위기와 상대 마음이 같은 쪽을 보고 있어서 망설일수록 기회가 줄어들어곰. 가볍게 시작하면 오래 가는 흐름이야곰.</span></p></div><div class="ab"><b>⏰ 언제?</b><p><span class="bl">12월 초, 둘만 있는 자리</span></p></div><div class="ab"><b>✅ 이렇게 해보자곰</b><ul><li><span class="bl">이번 주에 먼저 밥 약속 잡기</span></li><li><span class="bl">부담 없는 말로 마음 전하기</span></li></ul></div><p class="ex-cap">결론, 좋은 시기, 지금 할 일까지 딱 정리해줘곰</p></div>
+</div></div>
 <button class="btn" type="button" id="buyTarot">890원으로 타로 보자곰</button>
 </div>
 <div id="tarotStage" hidden></div>
@@ -1038,7 +1044,7 @@ function showRep(key){let shown=null;$('aiOut').querySelectorAll('.rep').forEach
 document.querySelectorAll('[data-topic]').forEach(b=>b.addEventListener('click',()=>{topic=b.dataset.topic;
   document.querySelectorAll('[data-topic]').forEach(x=>x.setAttribute('aria-pressed',x===b));$('majorLi').hidden=topic!=='직업·적성';$('statusF').hidden=topic!=='직업·적성'&&topic!=='합격운';$('examF').hidden=$('passLi').hidden=topic!=='합격운';$('marryLi').hidden=topic!=='결혼운';buyLabel();syncBuy();$('payMsg').textContent='';showRep(curKey())}));
 function buyLabel(){$('buyTopic').textContent='890원으로 '+topic+' 보고서 '+'열어보자곰';$('buyGung').textContent='890원으로 궁합 '+'보자곰'}
-document.querySelectorAll('[data-tone]').forEach(b=>b.addEventListener('click',()=>{tone=b.dataset.tone;if(typeof tarotSync==='function')tarotSync();
+document.querySelectorAll('[data-tone]').forEach(b=>b.addEventListener('click',()=>{tone=b.dataset.tone;setTimeout(()=>{if(typeof askDemo==='function')askDemo()},0);if(typeof tarotSync==='function')tarotSync();
   document.querySelectorAll('[data-tone]').forEach(x=>x.setAttribute('aria-pressed',x===b));$('s-pay').classList.toggle('fire',tone==='fire');$('fireWarn').hidden=tone!=='fire';buyLabel();syncBuy();showRep(curKey());chatEl();$('payMsg').textContent=''}));
 buyLabel();
 document.querySelectorAll('#gSeg button').forEach(b=>b.addEventListener('click',()=>{pg=b.dataset.pg;document.querySelectorAll('#gSeg button').forEach(x=>x.setAttribute('aria-pressed',x===b))}));
@@ -1111,8 +1117,13 @@ let QLEFT=0,QH={soft:[],fire:[]};
 const QHIST={get length(){return QH.soft.length+QH.fire.length}};
 function gm(){return MEMO['gung:'+tone]||MEMO['gung:soft']||MEMO['gung:fire']}
 function chatEl(){let c=$('chat').querySelector('.chatlog[data-tone="'+tone+'"]');if(!c){c=el('div','chatlog');c.dataset.tone=tone;$('chat').append(c)}$('chat').querySelectorAll('.chatlog').forEach(x=>x.hidden=x!==c);return c}
-function setQ(n){QLEFT=n;$('qleft').textContent=n;const started=n>0||QHIST.length>0;$('chatBox').hidden=!started;$('packs').hidden=started;$('morePack').hidden=n>0;
-  $('buyAsk').disabled=n===0;$('buyAsk').textContent=n?'곰에게 물어보자곰 (남은 질문 '+n+'개)':'질문을 다 썼어곰'}
+function setQ(n){QLEFT=n;$('qleft').textContent=n;const started=QHIST.length>0;$('packs').hidden=n>0;$('morePack').hidden=n===0;
+  $('chatDemo').hidden=started||n>0;$('q').disabled=n===0;$('q').placeholder=n?'예: 올해 이직해도 괜찮을까?':'질문 묶음을 사면 바로 물어볼 수 있어곰';
+  $('buyAsk').disabled=n===0;$('buyAsk').textContent=n?'곰에게 물어보자곰 (남은 질문 '+n+'개)':started?'질문을 다 썼어곰. 아래에서 묶음을 더 사자곰':'아래에서 질문 묶음을 먼저 골라줘곰';askDemo()}
+(function(){const pk=$('packs'),cb=$('chatBox'),it=pk.querySelector('p.txt');if(it)pk.parentNode.insertBefore(it,pk);pk.parentNode.insertBefore(cb,pk)})();
+function exTone(){document.querySelectorAll('.ex-tone').forEach(e=>{e.textContent=e.dataset[tone==='fire'?'fire':'soft']})}
+function askDemo(){exTone();const w=$('chatDemo');if(!w||w.hidden)return;const fire=tone==='fire';
+  w.innerHTML='<span class="ex-tag">예시 대화</span><div class="bb me"><p>올해 이직해도 괜찮을까?</p></div><div class="bb bear qwait'+(fire?' fire':'')+'"><p><i>•</i><i>•</i><i>•</i></p></div><p class="ex-cap" style="text-align:center">'+(fire?'질문 묶음 사면 불곰이 바로 호통쳐 준다곰':'질문 묶음을 사면 곰이 바로 대답해 줘곰')+'</p>'}
 function bonusQ(){setQ(QLEFT+1);$('payMsg').textContent='🎁 덤으로 곰 질문 1개를 받았어곰! \'곰에게 질문\' 탭에서 쓸 수 있어곰.'}
 /* ===== 타로 ===== */
 const T_MAJ=['바보','마법사','여사제','여황제','황제','교황','연인','전차','힘','은둔자','운명의 수레바퀴','정의','매달린 사람','죽음','절제','악마','탑','별','달','태양','심판','세계'];
@@ -1143,7 +1154,7 @@ function tFaceEl(c){const w=el('div','tfw');const im=new Image();im.alt=c.n+(c.r
 const T_BACK='<svg viewBox="0 0 120 200" xmlns="http://www.w3.org/2000/svg" font-family="Jua, sans-serif" text-anchor="middle"><rect x="2" y="2" width="116" height="196" rx="12" fill="#26355a" stroke="#9cc4ee" stroke-width="3"/><rect x="9" y="9" width="102" height="182" rx="8" fill="none" stroke="#9cc4ee" stroke-opacity=".45" stroke-dasharray="3 4"/>'+[[24,30],[96,34],[30,168],[92,164],[60,24],[60,176],[18,100],[102,100]].map(([x,y])=>'<text x="'+x+'" y="'+(y+4)+'" font-size="11" fill="#cfe0f5">✦</text>').join('')+'<circle cx="60" cy="100" r="34" fill="none" stroke="#9cc4ee" stroke-opacity=".5"/>'+tBear(60,98,18)+'<text x="60" y="140" font-size="12" fill="#cfe0f5">곰곰</text></svg>';
 const tCardEl=(c)=>{const d=el('div','tcard');d.innerHTML='<div class="tin"><div class="tb">'+T_BACK+'</div><div class="tf'+(c&&c.rev?' rev':'')+'"></div></div>';if(c)d.querySelector('.tf').append(tFaceEl(c));return d};
 let TAROT=null,TAROTS={soft:null,fire:null},TFREE=0;
-function tLabel(){const b=$('buyTarot');if(b)b.textContent=TFREE>0?'🎁 덤으로 받은 타로 보자곰 ('+TFREE+'번 남음)':'890원으로 타로 보자곰'}
+function tLabel(){const tl=$('tleft');if(tl)tl.textContent=TFREE;const b=$('buyTarot');if(b)b.textContent=TFREE>0?'🎁 덤으로 받은 타로 보자곰 ('+TFREE+'번)':'890원으로 타로 보자곰'}
 function tarotSync(){TAROT=TAROTS[tone];const f=$('tarotForm'),s=$('tarotStage');if(!f||!s)return;f.hidden=!!TAROT;s.hidden=!TAROT;s.querySelectorAll('.tstage').forEach(x=>x.hidden=x.dataset.tone!==tone)}
 function tarotClear(t){const T=TAROTS[t];if(T&&T.el)T.el.remove();TAROTS[t]=null;tarotSync()}
 function tarotReset(){TAROTS={soft:null,fire:null};TFREE=0;tLabel();const s=$('tarotStage');if(s)s.textContent='';tarotSync()}

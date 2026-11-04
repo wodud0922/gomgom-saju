@@ -973,7 +973,7 @@ $('buyTopic').addEventListener('click',async e=>{
     facts:'[곰이 계산한 앞으로 10년 '+topic+' 점수(0~100)] '+ys.map(x=>x.lab+' '+GAN[x.g]+ZHI[x.z]+' '+x.v).join(', ')+'. 좋은 해: '+yt.top.join(', ')+', 천천히 갈 해: '+yt.bot.join(', ')+
       '\n[올해 월별 점수, 절기 기준 달] '+ms.map(x=>x.lab.replace('(절기 기준)','')+' '+GAN[x.g]+ZHI[x.z]+' '+x.v).join(', ')+'. 좋은 달: '+mt.top.map(x=>x.replace('(절기 기준)','')).join(', ')+
       '\n시기 이야기는 이 점수와 어긋나지 않게 써.',
-    ctx:'[사주 정보]\n'+sajuText(CTX)+($('status').value&&(topic==='직업·적성'||topic==='합격운')?'\n지금 상황: '+$('status').value:'')+($('exam').value&&topic==='합격운'?'\n준비하는 시험: '+$('exam').value:''),done:bonusQ});
+    ctx:'[사주 정보]\n'+sajuText(CTX)+($('status').value&&(topic==='직업·적성'||topic==='합격운')?'\n지금 상황: '+$('status').value:'')+($('exam').value&&topic==='합격운'?'\n준비하는 시험: '+$('exam').value:'')+($('exam').value&&topic==='합격운'?'\n[주의] 준비하는 시험은 조언을 맞춤으로 하기 위한 참고일 뿐이야. 잘 붙는 시험 순위와 판정은 오직 사주로만 정해. 손님이 고른 시험이 사주와 안 맞으면 "안 맞아"라고 분명히 말하고 더 맞는 시험을 제시해. 손님이 골랐다는 이유로 그 시험을 좋게 말하거나 순위를 올리지 마. 그 시험을 계속 준비한다면 사주상 무엇을 조심하고 언제 보는 게 나은지도 알려 줘.':''),done:bonusQ});
 });
 function calcP(y,m,d,cal,tm){
   if(!(y>=1900&&y<=2099&&m>=1&&m<=12&&d>=1&&d<=31))throw'상대 생년월일을 다시 확인해보자곰';

@@ -46,3 +46,8 @@ input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visi
 .ai.fire .kw,.bb.bear.fire .kw{background:linear-gradient(transparent 58%,rgba(255,138,101,.45) 58%)}
 html[data-theme="light"] .rv-card{background:linear-gradient(180deg,#fff8dc,var(--card) 70%)!important;border:2.5px solid var(--butter-d)!important;box-shadow:0 5px 0 var(--butter-d)}
 html[data-theme="light"] .rv-card .rv-s{color:#e6d9a8}
+
+/* 로딩: 보라색 픽셀 타로 카드가 빙글빙글 */
+.ld-card{image-rendering:pixelated;filter:drop-shadow(0 4px 0 var(--edge));animation:none!important}
+@media (prefers-reduced-motion:no-preference){.ld-card{animation:ldspin 1.3s linear infinite!important}}
+@keyframes ldspin{from{transform:perspective(400px) rotateY(0)}to{transform:perspective(400px) rotateY(360deg)}}

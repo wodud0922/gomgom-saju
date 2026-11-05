@@ -50,13 +50,32 @@ module.exports = async (req, res) => {
   try {
     // 1) 손님 화면: 공개된 후기 목록
     if (req.method === 'GET') {
-      const [ids] = await redis([['ZREVRANGE', 'rv:pub', 0, PUB_MAX - 1]]);
-      const raw = ids && ids.length ? (await redis([['HMGET', 'rv:data', ...ids]]))[0] : [];
+      const q = req.query || Object.fromEntries(new URL(req.url, 'http://x').searchParams);
+      const k = KINDS.includes(q.k) ? q.k : '';
+      const off = Math.max(0, Math.min(5000, parseInt(q.off, 10) || 0));
+      const n = Math.max(1, Math.min(20, parseInt(q.n, 10) || 10));
+      // 풀이별 목록이 없으면(예전에 공개한 후기) 한 번 만들어 둠
+      const [mig] = await redis([['GET', 'rv:pubk:v1']]);
+      if (!mig) {
+        const [all] = await redis([['ZRANGE', 'rv:pub', 0, -1, 'WITHSCORES']]);
+        const ids = []; for (let i = 0; i < (all || []).length; i += 2) ids.push([all[i], all[i + 1]]);
+        if (ids.length) {
+          const [raw] = await redis([['HMGET', 'rv:data', ...ids.map(x => x[0])]]);
+          const cmds = [];
+          raw.forEach((x, i) => { if (!x) return; const r = JSON.parse(x); if (KINDS.includes(r.k)) cmds.push(['ZADD', 'rv:pub:' + r.k, ids[i][1], ids[i][0]]); });
+          if (cmds.length) await redis(cmds);
+        }
+        await redis([['SET', 'rv:pubk:v1', '1']]);
+      }
+      const key = k ? 'rv:pub:' + k : 'rv:pub';
+      const res1 = await redis([['ZREVRANGE', key, off, off + n - 1], ['HGETALL', 'rv:stat'], ['ZCARD', key], ...KINDS.map(x => ['ZCARD', 'rv:pub:' + x])]);
+      const ids = res1[0] || [], sum = res1[1] || [], total = res1[2] || 0;
+      const counts = {}; KINDS.forEach((x, i) => { if (res1[3 + i]) counts[x] = res1[3 + i]; });
+      const raw = ids.length ? (await redis([['HMGET', 'rv:data', ...ids]]))[0] : [];
       const list = raw.filter(Boolean).map(x => JSON.parse(x)).filter(r => r.st === 'on');
-      const [sum] = await redis([['HGETALL', 'rv:stat']]);
-      const st = {}; for (let i = 0; i < (sum || []).length; i += 2) st[sum[i]] = +sum[i + 1];
+      const st = {}; for (let i = 0; i < sum.length; i += 2) st[sum[i]] = +sum[i + 1];
       res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
-      return res.status(200).json({ n: st.n || 0, avg: st.n ? Math.round(st.sum / st.n * 10) / 10 : 0, list: list.map(pubView) });
+      return res.status(200).json({ n: st.n || 0, avg: st.n ? Math.round(st.sum / st.n * 10) / 10 : 0, total, more: off + n < total, counts, list: list.map(pubView) });
     }
     if (req.method !== 'POST') return res.status(405).json({ code: 'method' });
 
@@ -81,7 +100,7 @@ module.exports = async (req, res) => {
     }
 
     // 3) 관리자
-    if (b.action === 'admin' || b.action === 'set') {
+    if (['admin', 'set', 'test', 'purge'].includes(b.action)) {
       const ak = 'rv:adm:' + ipKey(req);
       const [tries] = await redis([['GET', ak]]);
       if (+tries >= 10) return res.status(429).json({ code: 'rate_limited', error: '비밀번호를 너무 많이 틀렸어곰. 1시간 뒤에 다시 해줘곰' });
@@ -89,15 +108,31 @@ module.exports = async (req, res) => {
         await redis([['INCR', ak], ['EXPIRE', ak, 3600]]);
         return res.status(401).json({ code: 'not_granted', error: '관리자 비밀번호가 맞지 않아곰' });
       }
+      // 테스트 후기: 관리자 화면에서만 보이고 손님 화면(공개 목록·평균)에는 절대 안 나감
+      if (b.action === 'test') {
+        const s = Math.round(+b.s), k = KINDS.includes(b.k) ? b.k : null;
+        if (!(s >= 1 && s <= 5) || !k) return res.status(400).json({ code: 'bad', error: '별점과 풀이를 골라 줘곰' });
+        const now = new Date(Date.now() + 9 * 3600 * 1000);
+        const id = 'test-' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
+        const r = { id, s, k, t: clean(b.t), f: b.f ? 1 : 0, ev: b.ev ? 1 : 0, buy: b.buy ? 1 : 0, test: 1,
+          at: now.toISOString().slice(5, 16).replace('-', '.').replace('T', ' '), ts: Date.now(), st: 'test' };
+        await redis([['HSET', 'rv:data', id, JSON.stringify(r)], ['ZADD', 'rv:all', r.ts, id]]);
+      }
+      if (b.action === 'purge') {
+        const [ids] = await redis([['ZRANGE', 'rv:all', 0, -1]]);
+        const del = (ids || []).filter(x => String(x).startsWith('test-'));
+        if (del.length) await redis([['HDEL', 'rv:data', ...del], ['ZREM', 'rv:all', ...del]]);
+      }
       if (b.action === 'set') {
         const id = String(b.id || ''), to = b.st;
+        if (id.startsWith('test-')) return res.status(400).json({ code: 'bad', error: '테스트 후기는 공개할 수 없어곰' });
         if (!['on', 'off', 'wait'].includes(to)) return res.status(400).json({ code: 'bad' });
         const [raw] = await redis([['HGET', 'rv:data', id]]);
         if (!raw) return res.status(404).json({ code: 'none', error: '그 후기를 못 찾았어곰' });
         const r = JSON.parse(raw), was = r.st;
         r.st = to;
         const cmds = [['HSET', 'rv:data', id, JSON.stringify(r)]];
-        if (to === 'on') cmds.push(['ZADD', 'rv:pub', r.ts, id]); else cmds.push(['ZREM', 'rv:pub', id]);
+        if (to === 'on') cmds.push(['ZADD', 'rv:pub', r.ts, id], ['ZADD', 'rv:pub:' + r.k, r.ts, id]); else cmds.push(['ZREM', 'rv:pub', id], ['ZREM', 'rv:pub:' + r.k, id]);
         if (was !== 'on' && to === 'on') cmds.push(['HINCRBY', 'rv:stat', 'n', 1], ['HINCRBY', 'rv:stat', 'sum', r.s]);
         if (was === 'on' && to !== 'on') cmds.push(['HINCRBY', 'rv:stat', 'n', -1], ['HINCRBY', 'rv:stat', 'sum', -r.s]);
         await redis(cmds);

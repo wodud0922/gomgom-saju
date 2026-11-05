@@ -667,3 +667,17 @@ span.ico{font-size:inherit!important;padding:0!important;line-height:0!important
 .pr-chip{flex:none;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 11px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
 .pr-chip.on{border-color:var(--accent);color:var(--accent);background:var(--mist)}
 .pr-load{display:block;width:100%;margin:8px 0 0;padding:10px;border:0;border-radius:12px;background:var(--mist);color:var(--accent);font:inherit;font-size:14.5px;cursor:pointer}
+/* 후기 팝업 부드럽게 */
+.pr-m.pr-open{animation:prFade .22s ease-out}
+.pr-m.pr-open .pr-box{animation:prPop .26s cubic-bezier(.2,.8,.3,1)}
+@keyframes prFade{from{opacity:0}to{opacity:1}}
+@keyframes prPop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.pr-mb{transition:opacity .18s ease}
+.pr-mb.pr-dim{opacity:.45}
+.pr-in{animation:prIn .28s ease-out both;animation-delay:calc(min(var(--i,0),6) * 35ms)}
+@keyframes prIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.pr-chip{transition:background .15s,border-color .15s,color .15s}
+.pr-sk i{display:block;height:12px;border-radius:6px;background:linear-gradient(90deg,var(--mist),var(--line),var(--mist));background-size:200% 100%;animation:prSh 1.1s linear infinite;margin:6px 0}
+.pr-sk i:nth-child(1){width:45%}.pr-sk i:nth-child(2){width:90%}.pr-sk i:nth-child(3){width:30%}
+@keyframes prSh{from{background-position:200% 0}to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.pr-m.pr-open,.pr-m.pr-open .pr-box,.pr-in{animation:none}}

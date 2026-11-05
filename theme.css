@@ -1,0 +1,48 @@
+/* 곰곰 사주 테마: 소프트 레트로 (style.css 위에 덮어쓰기 · 이 파일만 빼면 원래 디자인) */
+html:root:not(#x){--bg:#eef0fa;--card:#ffffff;--ink:#3d4260;--sub:#62677f;--line:#d6d9ee;--mist:#f5f6fd;--accent:#6f7fd6;--accent-ink:#fff;--cheek:#f4b6cc;--good:#3f8f68;--mid:#8a7436;--care:#b8566a;
+  --edge:#c3c8e6;--butter:#fde89f;--butter-d:#efc965;--pink:#fbdbe6;--sky:#dbe9fb;--mint:#d5f0e1;color-scheme:light}
+@media (prefers-color-scheme: dark){html:root:not(#x){--bg:#eef0fa;--card:#ffffff;--ink:#3d4260;--sub:#62677f;--line:#d6d9ee;--mist:#f5f6fd;--accent:#6f7fd6;--accent-ink:#fff;color-scheme:light}}
+
+/* 바탕: 옅은 도트 무늬 */
+body{background-color:var(--bg);background-image:radial-gradient(rgba(111,127,214,.2) 1.4px,transparent 1.6px);background-size:12px 12px}
+img[src$="bear.svg"]{image-rendering:pixelated}
+
+/* 카드: 덜 둥글게 + 아래로 두께감 (게임 블록 느낌) */
+.card{border:2.5px solid var(--edge);border-radius:14px;box-shadow:0 5px 0 var(--edge)}
+.bubble{border:2.5px solid var(--edge);border-radius:12px;box-shadow:0 4px 0 var(--edge)}
+.bubble::before{border-color:var(--edge)}
+input,select,textarea,.btn,.ghost,.tabs button,.seg button,.seg3 button,.pc{border-radius:10px!important}
+
+/* 강조(형광펜): 픽셀 마커처럼 또렷하게 */
+.kw,html:root .kw{color:inherit;background:linear-gradient(transparent 58%,#fde89f 58%);border-radius:0}
+
+/* 제목·소제목은 도트 느낌 글씨 */
+h2,h3,.dlg h4{font-family:'Do Hyeon','Jua',sans-serif;letter-spacing:.5px}
+h1{font-family:'Do Hyeon','Jua',sans-serif;letter-spacing:1px;color:#fff;text-shadow:2px 0 0 var(--ink),-2px 0 0 var(--ink),0 2px 0 var(--ink),0 -2px 0 var(--ink),2px 2px 0 var(--ink),4px 5px 0 var(--cheek)}
+
+/* 버튼: 동글한데 누르면 쑥 들어가는 게임 버튼 */
+.btn{background:var(--accent);color:#fff;box-shadow:0 5px 0 #4f5fb6;transform:translateY(0);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #4f5fb6}
+.ghost{background:#fff;color:var(--ink);border:2px solid var(--edge);box-shadow:0 4px 0 var(--edge)}
+.ghost:active{transform:translateY(3px);box-shadow:0 1px 0 var(--edge)}
+.tabs button,.seg button,.seg3 button{border:2px solid var(--edge);background:#fff;box-shadow:0 3px 0 var(--edge)}
+.tabs button[aria-selected=true]{background:var(--butter);color:var(--ink);border-color:var(--butter-d);box-shadow:0 3px 0 var(--butter-d)}
+.seg button[aria-pressed=true]{background:var(--pink);color:var(--ink);border-color:#eeb3c7;box-shadow:0 3px 0 #eeb3c7}
+.seg3 button[aria-pressed=true]{background:var(--sky);border-color:#b6cdee;box-shadow:0 3px 0 #b6cdee}
+
+/* 입력칸 */
+input,select,textarea{border:2px solid var(--edge);background:#fff}
+input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* 오행 막대: 칸칸이 나뉜 체력바 */
+.bar i{border:2px solid var(--edge);height:14px}
+.bar i u{background-image:repeating-linear-gradient(90deg,transparent 0 9px,rgba(255,255,255,.75) 9px 11px)}
+
+/* 곰코인 카드: 버터 노랑 블록 */
+.cn-bar{background:#fff8dc!important;border:2px solid var(--butter-d)!important;box-shadow:0 4px 0 var(--butter-d)!important}
+.cn-intro,.cn-share{background:var(--pink)!important;border:2px solid #eeb3c7!important;color:var(--ink)!important}
+.cn-pool i{border:2px solid var(--butter-d);height:12px!important;background-image:linear-gradient(90deg,#ffc93c var(--w),#fff var(--w))!important}
+.cn-coin{font-family:'Press Start 2P',monospace;font-size:14px!important}
+.ai.fire .kw,.bb.bear.fire .kw{background:linear-gradient(transparent 58%,rgba(255,138,101,.45) 58%)}
+html[data-theme="light"] .rv-card{background:linear-gradient(180deg,#fff8dc,var(--card) 70%)!important;border:2.5px solid var(--butter-d)!important;box-shadow:0 5px 0 var(--butter-d)}
+html[data-theme="light"] .rv-card .rv-s{color:#e6d9a8}

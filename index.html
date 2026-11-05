@@ -1016,7 +1016,7 @@ function reviewCard(kind,fire,onSent,reward){
       el('p','rv-l',(ta.value.trim()?'“'+ta.value.trim()+'” · ':'')+kind));
     if(reward){setQ(QLEFT+1);const g=el('div','rv-got');g.append(el('b',null,fire?'🎁 질문 1개 꽂아 줬다':'🎁 곰에게 질문 1개 받았어곰!'));const go=el('button','btn ghost rv-go',fire?'지금 바로 물어보기':'질문하러 가기곰');go.type='button';go.addEventListener('click',()=>{rvClose();document.querySelector('[data-tab="ask"]').click();$('tab-ask').scrollIntoView({behavior:'smooth',block:'start'})});g.append(go);w.append(g)}
     if(coin){const c=CN_LAST||{};const g=el('div','rv-got');if(c.got){CN.bal=c.bal;CN.claimed=true;cnSync();g.append(el('b',null,fire?'🪙 곰코인 3개 꽂아 줬다':'🪙 곰코인 3개 받았어곰!'),el('p','rv-l','내 코인 '+CN.bal+'개 · 보고서·궁합·타로는 3코인, 질문은 1코인이야곰'));const go=el('button','btn ghost rv-go','유료 풀이 보러 가기곰');go.type='button';go.addEventListener('click',()=>{rvClose();$('s-pay').scrollIntoView({behavior:'smooth',block:'start'})});g.append(go)}
-      else g.append(el('b',null,{claimed:'곰코인은 한 사람당 한 번만 받을 수 있어곰. 후기는 고마워곰!',pool:'이번 체험 곰코인이 다 떨어졌어곰. 후기는 고마워곰!',dup:'똑같은 후기로는 코인을 다시 받을 수 없어곰',ip:'같은 곳에서 오늘 받을 수 있는 코인을 다 받았어곰. 후기는 고마워곰!',end:'곰코인 체험 기간이 끝났어곰. 후기는 고마워곰!'}[c.why]||'후기는 잘 받았어곰. 코인은 지금 줄 수 없었어곰'));w.append(g);cnLoad()}
+      else g.append(el('b',null,{claimed:'곰코인은 한 사람당 한 번만 받을 수 있어곰. 후기는 고마워곰!',pool:'이번 체험 곰코인이 다 떨어졌어곰. 후기는 고마워곰!',today:'방금 오늘 곰코인이 다 나갔어곰. 내일 자정에 다시 풀리니까 그때 후기를 한 번 더 남기면 받을 수 있어곰!',dup:'똑같은 후기로는 코인을 다시 받을 수 없어곰',ip:'같은 곳에서 오늘 받을 수 있는 코인을 다 받았어곰. 후기는 고마워곰!',end:'곰코인 체험 기간이 끝났어곰. 후기는 고마워곰!'}[c.why]||'후기는 잘 받았어곰. 코인은 지금 줄 수 없었어곰'));w.append(g);cnLoad()}
     if(onSent)onSent(reward)});
   w.append(st,lab,ta,el('div','rv-f',''));w.lastChild.append(cnt,send);w.append(err);
   w.append(el('p','rv-n','이름·연락처는 쓰지 말아줘곰. 후기는 곰이 확인한 뒤 익명으로 사이트에 소개될 수 있어곰.'));
@@ -1032,7 +1032,7 @@ let RV_PRESET=0;
 function rvCard(id){const c=el('section','card rv-card');c.dataset.rv=id;rvCardTxt(c);return c}
 function rvCardTxt(c){const id=c.dataset.rv,done=RV_DONE.has(id);c.textContent='';c.classList.toggle('done',done);
   if(done){c.append(el('b','rv-h','🐾 후기 고마워곰!'),el('p','rv-cs','남겨 준 후기는 곰이 꼭꼭 읽어볼게곰'));return}
-  c.append(el('b','rv-h','🐻‍❄️ 곰 사주 풀이, 어땠어곰?'),el('p','rv-cs',cnCanEarn()?'20자 이상 후기 쓰면 🪙곰코인 3개! 코인으로 유료 풀이가 무료야곰':'별만 눌러도 후기가 돼곰. 10초면 끝나곰!'));
+  c.append(el('b','rv-h','🐻‍❄️ 곰 사주 풀이, 어땠어곰?'),el('p','rv-cs',cnCanEarn()?'20자 이상 후기 쓰면 🪙곰코인 3개! 코인으로 유료 풀이가 무료야곰':cnSoldOut()?'오늘 곰코인은 마감됐어곰. 내일 자정에 다시 풀려곰! 후기는 언제든 환영이야곰':'별만 눌러도 후기가 돼곰. 10초면 끝나곰!'));
   const st=el('div','rv-st');for(let i=1;i<=5;i++){const b=el('button','rv-s','★');b.type='button';b.setAttribute('aria-label',i+'점');
     b.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')[...st.children].forEach((x,k)=>x.classList.toggle('on',k<i))});
     b.addEventListener('pointerleave',()=>[...st.children].forEach(x=>x.classList.remove('on')));
@@ -1391,9 +1391,10 @@ document.querySelectorAll('.pack').forEach(b=>b.addEventListener('click',async()
   $('payMsg').textContent=(PAY_ON?'':'테스트 기간이라 결제 없이 ')+nm+' 묶음(질문 '+n+'개, '+b.dataset.price+'원)을 받았어곰! 🎁 타로 1번도 덤으로 넣어 뒀어곰';$('q').focus()}));
 $('morePack').addEventListener('click',()=>{$('packs').hidden=false;$('packs').scrollIntoView({block:'nearest'})});
 /* ===== 곰코인 무료 체험 (서버 /api/coin 지갑) ===== */
-let CN={on:false,bal:0,claimed:false,refs:0,left:0,pool:420,w:'',code:'',refMax:5},CN_TK='',CN_LAST=null,CN_PEND=null;
+let CN={on:false,bal:0,claimed:false,refs:0,left:0,pool:420,dayQuota:0,dayLeft:0,w:'',code:'',refMax:5},CN_TK='',CN_LAST=null,CN_PEND=null;
 const cnOn=()=>!!CN.on; // 체험 중에는 테스터 코드가 있어도 모두 똑같이 곰코인으로
-const cnCanEarn=()=>cnOn()&&!CN.claimed&&CN.left>=3;
+const cnCanEarn=()=>cnOn()&&!CN.claimed&&CN.dayLeft>=3;
+const cnSoldOut=()=>cnOn()&&!CN.claimed&&CN.dayLeft<3;
 function cnRefCode(){try{return localStorage.getItem('gg_ref')||undefined}catch(e){return undefined}}
 try{const rf=new URLSearchParams(location.search).get('ref');if(rf&&/^G[A-Z0-9]{5}$/.test(rf))localStorage.setItem('gg_ref',rf)}catch(e){}
 async function cnApi(body){const r=await fetch('/api/coin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));return {ok:r.ok,j}}
@@ -1404,12 +1405,12 @@ function cnSync(){const on=cnOn();$('cnIntro').hidden=!on;$('cnBar').hidden=!on|
   if(!on&&$('packs'))setQ(QLEFT);
   if(typeof buyLabel==='function')buyLabel();if(typeof tLabel==='function')tLabel();cnAskLabel();
   if(!on)return;
-  const left=Math.max(0,CN.left),b=$('cnBar');b.textContent='';
-  const t=el('div','cn-t');t.append(el('b',null,CN.claimed?'🪙 곰코인으로 유료 풀이 보자곰':'🪙 후기 남기고 곰코인 받자곰'),el('span',null,'11월 15일까지 · 1인 1회 3코인'));
+  const q=Math.max(1,CN.dayQuota||1),left=Math.max(0,Math.min(q,CN.dayLeft||0)),out=left<3,b=$('cnBar');b.textContent='';
+  const t=el('div','cn-t');t.append(el('b',null,CN.claimed?'🪙 곰코인으로 유료 풀이 보자곰':'🪙 후기 남기고 곰코인 받자곰'),el('span',null,'11월 15일까지 · 1인 1회 · 매일 자정 새로 풀려곰'));
   const me=el('div','cn-me');me.append(el('span','cn-coin','🪙 '+CN.bal),el('span',null,'내 곰코인'));
-  const pl=el('div','cn-pool');const bar=el('i');bar.style.setProperty('--w',(left/Math.max(1,CN.pool)*100)+'%');pl.append(el('span',null,left?'남은 곰코인 '+left+'개 · 다 떨어지면 끝나곰':'곰코인이 다 떨어졌어곰'),bar);
+  const pl=el('div','cn-pool');const bar=el('i');bar.style.setProperty('--w',(out?0:left/q*100)+'%');pl.classList.toggle('out',out);pl.append(el('span',null,out?'오늘 곰코인 마감! 내일 자정에 다시 풀려곰':'오늘 풀린 곰코인 '+q+'개 중 '+left+'개 남음'),bar);
   const rf=el('p','cn-ref','🔗 내 링크로 들어온 친구가 후기를 쓰면 나에게 🪙2코인 · '+Math.min(CN.refs,CN.refMax)+'/'+CN.refMax+'명');
-  b.append(t,me,pl,rf,el('p','cn-how',CN.claimed?'보고서·궁합·타로 3코인 · 곰에게 질문 1개 1코인':'바로 위 후기 칸에 20자 이상 쓰면 🪙3코인! 보고서·궁합·타로 3코인, 질문 1개 1코인으로 쓸 수 있어곰'))}
+  b.append(t,me,pl,rf,el('p','cn-how',!CN.claimed&&out?'오늘 곰코인은 마감됐어곰. 매일 자정에 새로 풀리니까 내일 후기 쓰고 🪙3코인 받아곰!':CN.claimed?'보고서·궁합·타로 3코인 · 곰에게 질문 1개 1코인':'바로 위 후기 칸에 20자 이상 쓰면 🪙3코인! 보고서·궁합·타로 3코인, 질문 1개 1코인으로 쓸 수 있어곰'))}
 function cnAskLabel(){const b=$('buyAsk');if(!b||!cnOn())return;$('packs').hidden=true;$('morePack').hidden=true;$('q').disabled=false;b.disabled=aiBusy;
   if(QLEFT<1){b.textContent='🪙 1코인으로 곰에게 물어보자곰';$('q').placeholder='예: 올해 이직해도 괜찮을까? (질문 1개 = 곰코인 1개)'}}
 async function cnSpend(kind){const m=$('payMsg');m.textContent='곰코인 쓰는 중이야곰…';

@@ -709,3 +709,4 @@ span.ico{font-size:inherit!important;padding:0!important;line-height:0!important
 .cn-ref{grid-column:1/-1;margin:0;font-size:13px;color:var(--sub)}
 .cn-share{margin:-4px 0 12px;font-size:13.5px;background:#fff3c4;color:#6b4a00;border-radius:12px;padding:7px 10px;text-align:center}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .cn-share{background:#3a3524;color:#ffe2a0}}
+.cn-pool.out span{color:var(--care,#d9614a);font-weight:600}

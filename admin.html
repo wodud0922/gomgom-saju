@@ -26,6 +26,7 @@ input,button{font:inherit}
 .st{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:10px;text-align:center}
 .st b{display:block;font-size:22px;font-weight:600}.st span{font-size:12.5px;color:var(--sub)}
 .st .y{color:var(--star)}
+.coin{margin-bottom:10px}.coin h2{font-size:15px;margin:0 0 8px;font-weight:600}.coin h2 small{font-weight:400;color:var(--sub);font-size:12px;margin-left:4px}.coin .stats{margin-bottom:6px}.cn-l{margin:0;font-size:12.5px;color:var(--sub);white-space:pre-line}
 .topics{margin-bottom:10px}
 .topics h2{font-size:15px;margin:0 0 8px;font-weight:600}
 .tp{display:grid;grid-template-columns:78px 1fr 64px;gap:8px;align-items:center;font-size:13.5px;margin:5px 0}
@@ -89,6 +90,14 @@ input,button{font:inherit}
 <div class="st"><b id="sAll">-</b><span>전체 후기</span></div>
 <div class="st"><b id="sWait">-</b><span>공개 대기</span></div>
 </div>
+<div class="card coin" id="coinBox"><h2>🪙 곰코인 현황 <small id="cnDay"></small></h2>
+<div class="stats">
+<div class="st"><b class="y" id="cDay">-</b><span>오늘 남은 코인</span></div>
+<div class="st"><b id="cLeft">-</b><span>전체 예산 남음</span></div>
+<div class="st"><b id="cWon">-</b><span>오늘 사용액(대략)</span></div>
+</div>
+<p class="cn-l" id="cMore"></p>
+</div>
 <div class="card topics"><h2>풀이별 평균 별점</h2><div id="tps"></div></div>
 <div class="bar" id="bar"></div>
 <div id="list"></div>
@@ -127,7 +136,7 @@ function draw(){
   if(!rows.length){L.append(el('p','empty','여기엔 후기가 없어곰'));return}
   rows.forEach(x=>{const c=el('div','rv'+(x.st==='off'?' hide':''));
     const top=el('div','top');top.append(el('span','stars',stars(x.s)),el('span','k',(x.f?'🔥 ':'')+x.k),el('span','st-l '+ST[x.st][1],ST[x.st][0]),el('span','when',x.at));
-    const meta=el('div','meta');if(x.test)meta.append(el('span','tag test','테스트 · 손님에게 안 보임'));if(x.buy)meta.append(el('span','tag buy','구매 인증'));meta.append(el('span','tag',x.k==='무료 사주'?'무료':'유료 풀이'));if(x.ev)meta.append(el('span','tag','후기 이벤트 참여 · 질문 1개 지급'));
+    const meta=el('div','meta');if(x.test)meta.append(el('span','tag test','테스트 · 손님에게 안 보임'));if(x.buy)meta.append(el('span','tag buy','구매 인증'));meta.append(el('span','tag',x.k==='무료 사주'?'무료':'유료 풀이'));if(x.ev)meta.append(el('span','tag',x.k==='무료 사주'?'🪙 곰코인 3개 지급':'후기 이벤트 참여 · 질문 1개 지급'));
     const acts=el('div','acts'),p=el('button','pub','공개하기'),h=el('button','hid','숨기기');p.type=h.type='button';p.disabled=x.st==='on'||!!x.test;h.disabled=x.st==='off'||!!x.test;
     p.addEventListener('click',()=>setSt(x,'on',p,h));h.addEventListener('click',()=>setSt(x,'off',p,h));acts.append(p,h);
     c.append(top,el('p','txt'+(x.t?'':' none'),x.t||'(별점만 남김)'),meta);if(!x.test)c.append(acts);L.append(c)});
@@ -141,7 +150,16 @@ function drawPv(){const P=$('pv');P.textContent='';const T=RV.filter(x=>x.test);
 async function mkTest(){const b=$('tGo');b.disabled=true;try{const j=await api({action:'test',s:+$('tS').value,k:$('tK').value,f:+$('tF').value,buy:$('tBuy').checked?1:0,ev:$('tEv').checked?1:0,t:$('tT').value.trim()});RV=j.list||RV;$('tT').value='';F='test';draw()}catch(e){alertMsg(e.error||'못 만들었어곰')}finally{b.disabled=false}}
 async function purge(){if(!RV.some(x=>x.test))return;const b=$('tDel');b.disabled=true;try{const j=await api({action:'purge'});RV=j.list||RV;F='all';draw()}catch(e){alertMsg(e.error||'못 지웠어곰')}finally{b.disabled=false}}
 async function api(body){const r=await fetch('/api/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({code:CODE},body))});const j=await r.json().catch(()=>({}));if(!r.ok)throw j;return j}
-async function load(){const j=await api({action:'admin'});RV=j.list||[];draw()}
+async function load(){const j=await api({action:'admin'});RV=j.list||[];draw();coinLoad()}
+async function coinLoad(){try{const r=await fetch('/api/coin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'stats',code:CODE})});const c=await r.json();if(!r.ok)throw c;
+  const st=c.stat||{},n=k=>+st[k]||0,dl=Math.max(0,c.dayQuota-c.dayIssued);
+  $('cnDay').textContent=c.today+(c.on?' · 체험 중 (~'+c.end+')':' · 체험 끝');
+  $('cDay').textContent=dl+' / '+c.dayQuota;$('cLeft').textContent=c.left+' / '+c.pool;$('cWon').textContent=c.dayWon.toLocaleString()+'원';
+  $('cMore').textContent='오늘 나간 코인 '+c.dayIssued+'개 · 전체 나간 코인 '+c.issued+'개 · 하루 사용 한도 '+c.dailyWon.toLocaleString()+'원\n'+
+    '코인 받은 사람 '+n('claims')+'명 · 친구 초대 보상 '+n('refs')+'번 · 지갑 '+n('wallets')+'개\n'+
+    '쓴 횟수: 보고서·궁합 '+n('use_report')+' · 타로 '+n('use_tarot')+' · 질문 '+n('use_ask')+' · 실패 환불 '+n('refunds')+'\n'+
+    '(사람 수·쓴 횟수는 이번 업데이트부터 세요)'}
+  catch(e){$('cMore').textContent='곰코인 숫자를 못 불러왔어곰'}}
 async function setSt(x,st,p,h){p.disabled=h.disabled=true;try{const j=await api({action:'set',id:x.id,st});RV=j.list||RV;draw()}catch(e){alertMsg(e.error||'바꾸지 못했어곰');draw()}}
 function alertMsg(t){const m=el('p','msg',t);$('list').prepend(m);setTimeout(()=>m.remove(),3000)}
 async function enter(){CODE=$('code').value.trim();if(!CODE)return;$('msg').textContent='';$('enter').disabled=true;

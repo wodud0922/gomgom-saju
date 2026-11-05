@@ -30,6 +30,7 @@
 
 <div class="formbar" id="formBar" hidden><div class="fb-info"><b id="fbName"></b><span id="fbMeta"></span></div><button type="button" id="fbBtn" aria-controls="form" aria-expanded="false">다시 입력하기 <i>▾</i></button></div>
 <section class="card intro" id="intro">
+<div class="cn-intro" id="cnIntro" hidden><b>11월 15일까지</b> 무료 사주 보고 <b>후기 남기면 🪙곰코인 3개</b><br>코인으로 유료 풀이를 무료로 볼 수 있어곰</div>
 <h1>곰곰 사주</h1>
 <p class="lead">사주 보고 싶은데 한자랑 어려운 용어 때문에 막막했지? 곰이 처음 보는 사람도 다 알아듣게 쉽게 풀어줘곰.</p>
 <ul class="feat"><li><b>무료</b>로 생년월일만 넣으면 내 사주 전체 풀이</li><li>모르는 말은 <b>눌러 보면 바로</b> 쉬운 설명</li><li>다정한 곰이나 매운맛 불곰이 연애·돈·일·타로까지</li></ul>
@@ -92,10 +93,12 @@
 <section class="card" id="s-wy"></section>
 <section class="card" id="s-mt"></section>
 <div id="s-rv"></div>
+<div class="cn-bar" id="cnBar" hidden></div>
 <section class="card">
 <h2>친구에게 자랑하기</h2>
 <button class="btn" id="linkBtn" type="button">🔗 내 사주 링크 보내기</button>
 <p class="note" style="margin:6px 0 12px">카톡이나 DM으로 보내면 친구가 누르자마자 내 사주 결과를 바로 볼 수 있어곰</p>
+<p class="cn-share" id="cnShare" hidden>🪙 이 링크로 들어온 친구가 자기 사주를 보고 <b>후기를 쓰면 나에게 2코인!</b> (최대 5명)</p>
 <button class="btn ghost" id="shareBtn" type="button">인스타 스토리용 이미지 만들기</button>
 <div id="sharePrev" hidden><img id="shareImg" alt="내 사주 공유 카드"><p class="note">이미지를 길게 눌러 저장하고 스토리에 올려보자곰</p></div>
 </section>
@@ -672,7 +675,7 @@ function run(){
   cardData={P:P.map((p,i)=>[POS[i][0],p?GAN[p.g]:'',p?ZHI[p.z]:'']),cnt:Object.fromEntries(ELS.map((e,i)=>[e,A.cnt[i]])),known,dgName:GK[dm]+EK[GE[dm]]+'('+GAN[dm]+GE[dm]+')',dgText:DM[GAN[dm]][0]+' 같은 사람이곰. '+DM[GAN[dm]][1]};
   CTX={name,gender,P,A,SL,RL,tgc,stTxt,DY,curDY,curY,SY,WY,curWY};
   $('aiOut').textContent='';$('payMsg').textContent='';BUSY.clear();syncBuy();for(const k in MEMO)delete MEMO[k];GUNGP=null;QH={soft:[],fire:[]};if(typeof tarotReset==='function')tarotReset();if($('chat'))$('chat').textContent='';setQ(0);
-  if(typeof rvReset==='function')rvReset();
+  if(typeof rvReset==='function')rvReset();if(typeof cnSync==='function')setTimeout(cnSync,0);
   $('sharePrev').hidden=true;
   $('res').hidden=false;$('hintBar').hidden=false;
   $('fbName').textContent=name+'님';$('fbMeta').textContent=(cal==='solar'?'양력 ':cal==='leap'?'음력(윤달) ':'음력 ')+y+'.'+m+'.'+d+(known?' '+$('tm').value:' · 시간 모름')+' · '+(gender==='m'?'남':'여')+' · '+$('city').options[$('city').selectedIndex].text;setForm(false);
@@ -837,13 +840,14 @@ async function pay(item){ // item = {id, name, price}
 let TCODE='';try{TCODE=localStorage.getItem('gomCode')||''}catch(e){}
 async function askAI(prompt,kind,tries){
   tries=tries||0;
-  if(!PAY_ON&&!TCODE)throw{code:'not_granted',message:'곰 상담소 위쪽에 테스터 코드를 먼저 넣어줘곰'};
+  const TK=TCODE?'':CN_TK;
+  if(!PAY_ON&&!TCODE&&!TK)throw{code:'not_granted',message:'곰 상담소 위쪽에 테스터 코드를 먼저 넣어줘곰'};
   let r,j={};
-  try{r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:TCODE,kind:kind||'report',prompt})});j=await r.json().catch(()=>({}))}
+  try{r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:TCODE,ticket:TK||undefined,kind:kind||'report',prompt})});j=await r.json().catch(()=>({}))}
   catch(e){throw{code:'net',message:'인터넷 연결을 확인해 줘곰'}}
   if(r.status===504)throw{code:'fail',message:'곰이 너무 오래 걸려서 멈췄어곰. 다시 해보자곰'};
   if(r.status===429&&j.code==='rate_limited'&&tries<5){const w=(j.retryAfter||15)*1000;const m=$('payMsg');const old=m.textContent;m.textContent='곰이 잠깐 숨 고르는 중이야곰… 자동으로 이어서 쓸게곰';await new Promise(res=>setTimeout(res,w));if(m.textContent.startsWith('곰이 잠깐 숨'))m.textContent=old;return askAI(prompt,kind,tries+1)}
-  if(!r.ok||!j.ok){if(r.status===401){TCODE='';try{localStorage.removeItem('gomCode')}catch(e){}showCode(true)}throw{code:j.code||'fail',message:j.error}}
+  if(!r.ok||!j.ok){if(r.status===401&&TCODE){TCODE='';try{localStorage.removeItem('gomCode')}catch(e){}showCode(true)}throw{code:j.code||'fail',message:j.error}}
   return j.data;
 }
 function showCode(bad){$('codeBox').hidden=false;$('codeMsg').textContent=bad?'코드가 맞지 않아곰. 다시 확인해 줘곰':'테스트 기간에는 코드를 받은 사람만 쓸 수 있어곰';if(bad)$('tcode').focus()}
@@ -987,7 +991,9 @@ const RV_TXT={1:'별로였어곰…',2:'아쉬웠어곰',3:'그럭저럭이었�
 function reviewCard(kind,fire,onSent,reward){
   const w=el('div','rv'+(fire?' fire':''));let star=0;
   w.append(el('b','rv-h',fire?'🔥 불곰 풀이, 솔직히 어땠냐':'🐻‍❄️ 곰 풀이 어땠어곰?'));
+  if(cnOn())reward=false;
   if(reward)w.append(el('p','rv-gift',fire?'🎁 후기 쓰면 질문 1개 준다 (별점 상관없음)':'🎁 후기 쓰면 질문 1개 선물 (별점 상관없어곰)'));
+  const coin=kind==='무료 사주'&&cnCanEarn();if(coin)w.append(el('p','rv-gift cn',fire?'🪙 20자 넘게 써라. 곰코인 3개 준다':'🪙 20자 이상 쓰면 곰코인 3개! 코인으로 유료 풀이를 볼 수 있어곰'));
   const st=el('div','rv-st');st.setAttribute('role','radiogroup');st.setAttribute('aria-label','별점');
   const lab=el('p','rv-l','별을 눌러 줘곰');
   const paint=n=>[...st.children].forEach((b,i)=>b.classList.toggle('on',i<n));
@@ -996,18 +1002,21 @@ function reviewCard(kind,fire,onSent,reward){
     b.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')paint(i)});b.addEventListener('pointerleave',()=>paint(star));st.append(b)}
   if(RV_PRESET){const pi=RV_PRESET;RV_PRESET=0;setTimeout(()=>st.children[pi-1].click(),0)}
   const ta=el('textarea','rv-t');ta.maxLength=100;ta.rows=2;ta.placeholder=fire?'한 줄로 까든 칭찬하든 해봐 (선택)':'한 줄 후기도 남겨 줄래곰? (선택)';
-  const cnt=el('span','rv-c','0/100');ta.addEventListener('input',()=>cnt.textContent=ta.value.length+'/100');
-  const send=el('button','btn rv-b','후기 보내기');send.type='button';send.disabled=true;
+  const cnt=el('span','rv-c','0/100');ta.addEventListener('input',()=>{const n=ta.value.trim().length;cnt.textContent=coin?(n>=20?'✓ 코인 조건 충족 ':'')+n+'/20자 이상':ta.value.length+'/100';cnt.classList.toggle('ok',coin&&n>=20)});if(coin){ta.placeholder=fire?'20자 이상 솔직하게 써 봐':'어떤 점이 좋았는지 20자 이상 써 줘곰';cnt.textContent='0/20자 이상'}
+  const send=el('button','btn rv-b',coin?'보내고 🪙3코인 받기':'후기 보내기');send.type='button';send.disabled=true;
   const err=el('p','rv-err','');
   send.addEventListener('click',async()=>{
+    if(coin&&ta.value.trim().length<20){err.textContent='코인을 받으려면 20자 이상 써 줘곰 (지금 '+ta.value.trim().length+'자)';ta.focus();return}
     if(!star||send.disabled&&send.dataset.busy)return;send.disabled=true;send.dataset.busy='1';send.textContent='보내는 중…';err.textContent='';
-    let ok=false;try{const r=await fetch('/api/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'submit',k:kind,s:star,t:ta.value.trim(),f:fire?1:0})});const j=await r.json().catch(()=>({}));ok=r.ok&&j.ok;if(!ok)err.textContent=j.error||'후기를 못 보냈어곰. 다시 눌러 줘곰'}catch(e){err.textContent='인터넷 연결을 확인하고 다시 눌러 줘곰'}
+    let ok=false;try{const r=await fetch('/api/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'submit',k:kind,s:star,t:ta.value.trim(),f:fire?1:0,w:coin?CN.w:undefined,ref:coin?cnRefCode():undefined})});const j=await r.json().catch(()=>({}));ok=r.ok&&j.ok;if(ok)CN_LAST=j.coin||null;if(!ok)err.textContent=j.error||'후기를 못 보냈어곰. 다시 눌러 줘곰'}catch(e){err.textContent='인터넷 연결을 확인하고 다시 눌러 줘곰'}
     if(!ok){send.disabled=false;delete send.dataset.busy;send.textContent='후기 보내기';return}
     w.textContent='';w.classList.add('done');
     w.append(el('b','rv-h',fire?'🔥 후기 받았다. 고맙다 진짜로':'🐾 고마워곰! 후기 잘 받았어곰'),
       el('div','rv-st sm','★★★★★'.slice(0,star)+'☆☆☆☆☆'.slice(0,5-star)),
       el('p','rv-l',(ta.value.trim()?'“'+ta.value.trim()+'” · ':'')+kind));
     if(reward){setQ(QLEFT+1);const g=el('div','rv-got');g.append(el('b',null,fire?'🎁 질문 1개 꽂아 줬다':'🎁 곰에게 질문 1개 받았어곰!'));const go=el('button','btn ghost rv-go',fire?'지금 바로 물어보기':'질문하러 가기곰');go.type='button';go.addEventListener('click',()=>{rvClose();document.querySelector('[data-tab="ask"]').click();$('tab-ask').scrollIntoView({behavior:'smooth',block:'start'})});g.append(go);w.append(g)}
+    if(coin){const c=CN_LAST||{};const g=el('div','rv-got');if(c.got){CN.bal=c.bal;CN.claimed=true;cnSync();g.append(el('b',null,fire?'🪙 곰코인 3개 꽂아 줬다':'🪙 곰코인 3개 받았어곰!'),el('p','rv-l','내 코인 '+CN.bal+'개 · 보고서·궁합·타로는 3코인, 질문은 1코인이야곰'));const go=el('button','btn ghost rv-go','유료 풀이 보러 가기곰');go.type='button';go.addEventListener('click',()=>{rvClose();$('s-pay').scrollIntoView({behavior:'smooth',block:'start'})});g.append(go)}
+      else g.append(el('b',null,{claimed:'곰코인은 한 사람당 한 번만 받을 수 있어곰. 후기는 고마워곰!',pool:'이번 체험 곰코인이 다 떨어졌어곰. 후기는 고마워곰!',dup:'똑같은 후기로는 코인을 다시 받을 수 없어곰',ip:'같은 곳에서 오늘 받을 수 있는 코인을 다 받았어곰. 후기는 고마워곰!',end:'곰코인 체험 기간이 끝났어곰. 후기는 고마워곰!'}[c.why]||'후기는 잘 받았어곰. 코인은 지금 줄 수 없었어곰'));w.append(g);cnLoad()}
     if(onSent)onSent(reward)});
   w.append(st,lab,ta,el('div','rv-f',''));w.lastChild.append(cnt,send);w.append(err);
   w.append(el('p','rv-n','이름·연락처는 쓰지 말아줘곰. 후기는 곰이 확인한 뒤 익명으로 사이트에 소개될 수 있어곰.'));
@@ -1023,7 +1032,7 @@ let RV_PRESET=0;
 function rvCard(id){const c=el('section','card rv-card');c.dataset.rv=id;rvCardTxt(c);return c}
 function rvCardTxt(c){const id=c.dataset.rv,done=RV_DONE.has(id);c.textContent='';c.classList.toggle('done',done);
   if(done){c.append(el('b','rv-h','🐾 후기 고마워곰!'),el('p','rv-cs','남겨 준 후기는 곰이 꼭꼭 읽어볼게곰'));return}
-  c.append(el('b','rv-h','🐻‍❄️ 곰 사주 풀이, 어땠어곰?'),el('p','rv-cs','별만 눌러도 후기가 돼곰. 10초면 끝나곰!'));
+  c.append(el('b','rv-h','🐻‍❄️ 곰 사주 풀이, 어땠어곰?'),el('p','rv-cs',cnCanEarn()?'20자 이상 후기 쓰면 🪙곰코인 3개! 코인으로 유료 풀이가 무료야곰':'별만 눌러도 후기가 돼곰. 10초면 끝나곰!'));
   const st=el('div','rv-st');for(let i=1;i<=5;i++){const b=el('button','rv-s','★');b.type='button';b.setAttribute('aria-label',i+'점');
     b.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')[...st.children].forEach((x,k)=>x.classList.toggle('on',k<i))});
     b.addEventListener('pointerleave',()=>[...st.children].forEach(x=>x.classList.remove('on')));
@@ -1280,7 +1289,7 @@ $('tq').addEventListener('input',()=>{$('tqn').textContent=$('tq').value.length}
 $('buyTarot').addEventListener('click',async()=>{
   if(!CTX)return;if(TAROT&&TAROT.busy){$('payMsg').textContent='곰이 아직 카드를 읽는 중이야곰';return}
   const q=$('tq').value.trim().slice(0,200);if(q.length<4){$('payMsg').textContent='고민을 조금 더 자세히 적어보자곰';$('tq').focus();return}
-  if(!PAY_ON&&!TCODE){showCode(false);$('payMsg').textContent='곰 상담소 위쪽에 테스터 코드를 먼저 넣어줘곰';return}
+  if(!PAY_ON&&!TCODE&&!CN_TK){showCode(false);$('payMsg').textContent='곰 상담소 위쪽에 테스터 코드를 먼저 넣어줘곰';return}
   if(TFREE>0){TFREE--;tLabel()}else if(!(await pay({id:'tarot',name:'타로 3장',price:890})))return;
   if(TAROTS[tone])tarotClear(tone);$('payMsg').textContent='';TAROT={q,tone,picked:[],flipped:0,res:null,err:null,busy:true,key:'tarot:'+tone+':'+Date.now()};
   TAROTS[tone]=TAROT;tarotStage();tarotSync();
@@ -1381,6 +1390,49 @@ document.querySelectorAll('.pack').forEach(b=>b.addEventListener('click',async()
   setQ(QLEFT+n);TFREE++;tLabel();
   $('payMsg').textContent=(PAY_ON?'':'테스트 기간이라 결제 없이 ')+nm+' 묶음(질문 '+n+'개, '+b.dataset.price+'원)을 받았어곰! 🎁 타로 1번도 덤으로 넣어 뒀어곰';$('q').focus()}));
 $('morePack').addEventListener('click',()=>{$('packs').hidden=false;$('packs').scrollIntoView({block:'nearest'})});
+/* ===== 곰코인 무료 체험 (서버 /api/coin 지갑) ===== */
+let CN={on:false,bal:0,claimed:false,refs:0,left:0,pool:420,w:'',code:'',refMax:5},CN_TK='',CN_LAST=null,CN_PEND=null;
+const cnOn=()=>!!CN.on&&!TCODE;
+const cnCanEarn=()=>cnOn()&&!CN.claimed&&CN.left>=3;
+function cnRefCode(){try{return localStorage.getItem('gg_ref')||undefined}catch(e){return undefined}}
+try{const rf=new URLSearchParams(location.search).get('ref');if(rf&&/^G[A-Z0-9]{5}$/.test(rf))localStorage.setItem('gg_ref',rf)}catch(e){}
+async function cnApi(body){const r=await fetch('/api/coin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));return {ok:r.ok,j}}
+async function cnLoad(){let w='';try{w=localStorage.getItem('gg_w')||''}catch(e){}
+  try{const {ok,j}=await cnApi({action:'me',w});if(!ok)return;CN=Object.assign(CN,j);if(j.w){try{localStorage.setItem('gg_w',j.w)}catch(e){}}}catch(e){}cnSync();document.querySelectorAll('.rv-card').forEach(rvCardTxt)}
+function cnSync(){const on=cnOn();$('cnIntro').hidden=!on;$('cnBar').hidden=!on||!CTX;if($('cnShare'))$('cnShare').hidden=!on||!CN.code;
+  $('codeBox').hidden=!!TCODE||PAY_ON||on;$('betaBox').hidden=PAY_ON||on;
+  if(!on&&$('packs'))setQ(QLEFT);
+  if(typeof buyLabel==='function')buyLabel();if(typeof tLabel==='function')tLabel();cnAskLabel();
+  if(!on)return;
+  const left=Math.max(0,CN.left),b=$('cnBar');b.textContent='';
+  const t=el('div','cn-t');t.append(el('b',null,CN.claimed?'🪙 곰코인으로 유료 풀이 보자곰':'🪙 후기 남기고 곰코인 받자곰'),el('span',null,'11월 15일까지 · 1인 1회 3코인'));
+  const me=el('div','cn-me');me.append(el('span','cn-coin','🪙 '+CN.bal),el('span',null,'내 곰코인'));
+  const pl=el('div','cn-pool');const bar=el('i');bar.style.setProperty('--w',(left/Math.max(1,CN.pool)*100)+'%');pl.append(el('span',null,left?'남은 곰코인 '+left+'개 · 다 떨어지면 끝나곰':'곰코인이 다 떨어졌어곰'),bar);
+  const rf=el('p','cn-ref','🔗 내 링크로 들어온 친구가 후기를 쓰면 나에게 🪙2코인 · '+Math.min(CN.refs,CN.refMax)+'/'+CN.refMax+'명');
+  b.append(t,me,pl,rf,el('p','cn-how',CN.claimed?'보고서·궁합·타로 3코인 · 곰에게 질문 1개 1코인':'바로 위 후기 칸에 20자 이상 쓰면 🪙3코인! 보고서·궁합·타로 3코인, 질문 1개 1코인으로 쓸 수 있어곰'))}
+function cnAskLabel(){const b=$('buyAsk');if(!b||!cnOn())return;$('packs').hidden=true;$('morePack').hidden=true;$('q').disabled=false;b.disabled=aiBusy;
+  if(QLEFT<1){b.textContent='🪙 1코인으로 곰에게 물어보자곰';$('q').placeholder='예: 올해 이직해도 괜찮을까? (질문 1개 = 곰코인 1개)'}}
+async function cnSpend(kind){const m=$('payMsg');m.textContent='곰코인 쓰는 중이야곰…';
+  try{const {ok,j}=await cnApi({action:'spend',w:CN.w,kind});if(!ok){m.textContent=(j.error||'곰코인을 쓰지 못했어곰')+(j.code==='coin'?'. 무료 사주 맨 아래 후기를 20자 이상 쓰면 3코인을 받아곰!':'');if(typeof j.bal==='number'){CN.bal=j.bal;cnSync()}return ''}
+    CN.bal=j.bal;cnSync();m.textContent='🪙 '+({report:3,tarot:3,ask:1}[kind])+'코인을 썼어곰! 남은 코인 '+CN.bal+'개';return j.ticket}
+  catch(e){m.textContent='인터넷 연결을 확인하고 다시 눌러 줘곰';return ''}}
+async function cnRefund(tk){if(!tk)return;try{const {ok,j}=await cnApi({action:'refund',w:CN.w,ticket:tk});if(ok){CN.bal=j.bal;cnSync();$('payMsg').textContent='풀이를 못 만들어서 곰코인을 돌려줬어곰'}}catch(e){}}
+document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.closest('#buyTopic,#buyGung,#buyTarot,#buyAsk');if(!t||!cnOn())return;
+  if(t.dataset.cnok){delete t.dataset.cnok;return}
+  if(t.id==='buyAsk'&&QLEFT>0&&CN_TK)return;
+  if(t.id==='buyAsk'&&$('q').value.trim().length<4)return;
+  if(t.id==='buyTarot'&&$('tq').value.trim().length<4)return;
+  if(t.id==='buyGung'&&!($('g_y').value&&$('g_m').value&&$('g_d').value))return;
+  e.preventDefault();e.stopImmediatePropagation();if(t.dataset.busy)return;t.dataset.busy='1';
+  const kind=t.id==='buyTarot'?'tarot':t.id==='buyAsk'?'ask':'report';const tk=await cnSpend(kind);delete t.dataset.busy;if(!tk)return;
+  CN_TK=tk;CN_PEND={kind,tk};if(kind==='ask'&&QLEFT<1)setQ(QLEFT+1);t.dataset.cnok='1';t.click()},true);
+{const _mk=makeReport;makeReport=async function(btn,R){const p=CN_PEND;if(!p||p.kind!=='report')return _mk(btn,R);CN_PEND=null;let ok=false;const d=R.done;R.done=()=>{ok=true;if(d)d()};await _mk(btn,R);if(!ok)cnRefund(p.tk)}}
+{const _ts=tarotStage;tarotStage=function(){const p=CN_PEND;if(p&&p.kind==='tarot'){CN_PEND=null;TAROT.cnTk=p.tk}return _ts.apply(this,arguments)}}
+{const _tf=tFail;tFail=function(T){if(T&&T.cnTk){const tk=T.cnTk;T.cnTk='';cnRefund(tk)}return _tf.apply(this,arguments)}}
+{const _sq=setQ;setQ=function(n){_sq(n);cnAskLabel()}}
+{const _bl=buyLabel;buyLabel=function(){_bl();if(cnOn()){$('buyTopic').textContent='🪙 3코인으로 '+topic+' 보고서 열어보자곰';$('buyGung').textContent='🪙 3코인으로 궁합 보자곰'}}}
+{const _tl=tLabel;tLabel=function(){_tl();const b=$('buyTarot');if(cnOn()&&b&&TFREE<=0)b.textContent='🪙 3코인으로 타로 보자곰'}}
+setTimeout(cnLoad,0);
 const goTab=(k,tp)=>{document.querySelector('[data-tab="'+k+'"]').click();if(tp)document.querySelector('[data-topic="'+tp+'"]').click();$('s-pay').scrollIntoView({behavior:'smooth'})};
 function answerBubble(r){
   const d=el('div','bb bear'+(tone==='fire'?' fire':''));
@@ -1410,7 +1462,7 @@ $('buyAsk').addEventListener('click',async e=>{
     if(!r||(!r.한줄&&!r.풀이))throw{code:'empty'};
     const a=answerBubble(r);QH[tone].push({q,a:a.slice(0,400)});setQ(QLEFT-1);$('payMsg').textContent='';
   }catch(err){wait.remove();$('payMsg').textContent=(err&&err.message?err.message:'답을 가져오지 못했어곰')+(err&&err.code==='rate_limited'?'':' 질문은 차감되지 않았어곰.')}
-  finally{aiBusy=false;btn.disabled=QLEFT<1}
+  finally{aiBusy=false;btn.disabled=QLEFT<1&&!cnOn()}
 });
 
 /* ---------- 카드 넘기기 ---------- */
@@ -1431,7 +1483,7 @@ $('hintX').addEventListener('click',()=>{$('hintBar').hidden=true});
 let LINKD=null,SHARED=false;
 const b64e=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const b64d=t=>JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/')))));
-function shareURL(){const L=LINKD;return location.origin+location.pathname+'#s='+b64e({n:L.n,g:L.g,c:L.c,y:L.y,m:L.m,d:L.d,t:L.t,l:L.l})}
+function shareURL(){const L=LINKD;return location.origin+location.pathname+(cnOn()&&CN.code?'?ref='+CN.code:'')+'#s='+b64e({n:L.n,g:L.g,c:L.c,y:L.y,m:L.m,d:L.d,t:L.t,l:L.l})}
 $('linkBtn').addEventListener('click',async()=>{
   if(!LINKD)return;const url=shareURL(),text=LINKD.n+'님은 '+LINKD.dm+' 같은 '+LINKD.dg+'이래곰! 🐻‍❄️ 사주 여덟 글자랑 대운, 신살까지 봐 봐곰';
   if(navigator.share){try{await navigator.share({title:'곰곰 사주 · '+LINKD.n+'님의 사주',text,url});return}catch(e){if(e.name==='AbortError')return}}
@@ -1479,6 +1531,7 @@ $('go').addEventListener('click',()=>startRun());
 ['nm','y','m','d'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter')startRun()}));
 /* ===== 귀여운 아이콘 (기본 이모지 대신) ===== */
 const ICO={
+coin:'<circle cx="12" cy="12" r="10" fill="#ffc93c"/><circle cx="12" cy="12" r="10" fill="none" stroke="#e0a400" stroke-width="1.6"/><circle cx="12" cy="12" r="7.3" fill="none" stroke="#f2b51d" stroke-width="1.1"/><path d="M12 6.6l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z" fill="#fff6d6" stroke="#e0a400" stroke-width=".8" stroke-linejoin="round"/><ellipse cx="8.4" cy="7.6" rx="2.2" ry="1.2" fill="#fff" opacity=".55" transform="rotate(-30 8.4 7.6)"/>',
 fire:'<path d="M12 2.5c1.2 3 5.5 5.2 5.5 10.2a5.5 5.5 0 0 1-11 0c0-2.3 1.1-3.9 2.2-5 0 1.6.7 2.7 1.7 3.2C10.1 8.6 11 5.6 12 2.5z" fill="#ff8a65"/><path d="M12 11.2c1.1 1.6 2.7 2.6 2.7 4.6a2.7 2.7 0 0 1-5.4 0c0-1.6 1.1-2.7 2.7-4.6z" fill="#ffd166"/>',
 heart:'<path d="M12 20.5s-7.5-4.6-7.5-10.4A4.1 4.1 0 0 1 12 7.6a4.1 4.1 0 0 1 7.5 2.5c0 5.8-7.5 10.4-7.5 10.4z" fill="#ff8fab"/><ellipse cx="8.4" cy="9.6" rx="1.5" ry="1" fill="#fff" opacity=".75"/>',
 money:'<circle cx="12" cy="12" r="9" fill="#ffd166"/><circle cx="12" cy="12" r="6.3" fill="none" stroke="#f0a43a" stroke-width="1.5"/><path d="M8.8 9.2l1.3 5.6 1.9-4.2 1.9 4.2 1.3-5.6M8.4 11.7h7.2" fill="none" stroke="#e08e1b" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -1501,7 +1554,7 @@ bad:'<circle cx="12" cy="12" r="9" fill="#ff9b85"/><circle cx="9" cy="10.4" r="1
 bear:'<circle cx="6" cy="6.6" r="3.4" fill="#fff" stroke="#c9d8e8" stroke-width="1.3"/><circle cx="18" cy="6.6" r="3.4" fill="#fff" stroke="#c9d8e8" stroke-width="1.3"/><circle cx="6" cy="6.6" r="1.5" fill="#f6a9b4" opacity=".6"/><circle cx="18" cy="6.6" r="1.5" fill="#f6a9b4" opacity=".6"/><ellipse cx="12" cy="13.6" rx="9.2" ry="8.1" fill="#fff" stroke="#c9d8e8" stroke-width="1.3"/><circle cx="8.5" cy="12.4" r="1.05" fill="#34415a"/><circle cx="15.5" cy="12.4" r="1.05" fill="#34415a"/><ellipse cx="12" cy="15.7" rx="2.9" ry="2.1" fill="#eef4fb" stroke="#c9d8e8" stroke-width=".8"/><ellipse cx="12" cy="15" rx="1.15" ry=".85" fill="#34415a"/><circle cx="6.5" cy="15.8" r="1.3" fill="#f6a9b4" opacity=".7"/><circle cx="17.5" cy="15.8" r="1.3" fill="#f6a9b4" opacity=".7"/>',
 eyes:'<ellipse cx="7.6" cy="12" rx="4.6" ry="6.2" fill="#fff" stroke="#c9d8e8" stroke-width="1.2"/><ellipse cx="16.4" cy="12" rx="4.6" ry="6.2" fill="#fff" stroke="#c9d8e8" stroke-width="1.2"/><circle cx="9" cy="13.4" r="2.3" fill="#34415a"/><circle cx="17.8" cy="13.4" r="2.3" fill="#34415a"/><circle cx="9.7" cy="12.6" r=".7" fill="#fff"/><circle cx="18.5" cy="12.6" r=".7" fill="#fff"/>',
 paw:'<g fill="#ffb3c6"><ellipse cx="12" cy="15.6" rx="4.6" ry="3.9"/><circle cx="6.4" cy="10.6" r="2.1"/><circle cx="9.9" cy="6.9" r="2.1"/><circle cx="14.1" cy="6.9" r="2.1"/><circle cx="17.6" cy="10.6" r="2.1"/></g>'};
-const EMO2ICO={'🔥':'fire','💕':'heart','💰':'money','💼':'work','💍':'ring','📝':'note','🔮':'crystal','🎁':'gift','🎓':'grad','🔗':'link','✅':'check','🔸':'soso','❌':'cross','⏰':'clock','👆':'tap','🍀':'clover','📅':'cal','👍':'good','👎':'bad','🐾':'paw','👀':'eyes','🐻\u200d❄':'bear'};
+const EMO2ICO={'🪙':'coin','🔥':'fire','💕':'heart','💰':'money','💼':'work','💍':'ring','📝':'note','🔮':'crystal','🎁':'gift','🎓':'grad','🔗':'link','✅':'check','🔸':'soso','❌':'cross','⏰':'clock','👆':'tap','🍀':'clover','📅':'cal','👍':'good','👎':'bad','🐾':'paw','👀':'eyes','🐻\u200d❄':'bear'};
 const EMO_RE=new RegExp('('+Object.keys(EMO2ICO).sort((x,y)=>y.length-x.length).join('|')+')\\uFE0F?','g');
 const icoSvg=n=>'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+ICO[n]+'</svg>';
 const MASK=[[/병신|ㅂㅅ/g,'**']];

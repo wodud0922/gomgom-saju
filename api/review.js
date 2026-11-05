@@ -51,6 +51,15 @@ module.exports = async (req, res) => {
     // 1) 손님 화면: 공개된 후기 목록
     if (req.method === 'GET') {
       const q = req.query || Object.fromEntries(new URL(req.url, 'http://x').searchParams);
+      if (q.all) {   // 공개 후기 전부(최근 300개)를 한 번에: 화면에서 바로바로 거르고 넘길 수 있게
+        const r0 = await redis([['ZREVRANGE', 'rv:pub', 0, 299], ['HGETALL', 'rv:stat']]);
+        const ids = r0[0] || [], sum = r0[1] || [];
+        const raw = ids.length ? (await redis([['HMGET', 'rv:data', ...ids]]))[0] : [];
+        const list = raw.filter(Boolean).map(x => JSON.parse(x)).filter(r => r.st === 'on');
+        const st = {}; for (let i = 0; i < sum.length; i += 2) st[sum[i]] = +sum[i + 1];
+        res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=600');
+        return res.status(200).json({ n: st.n || 0, avg: st.n ? Math.round(st.sum / st.n * 10) / 10 : 0, list: list.map(pubView) });
+      }
       const k = KINDS.includes(q.k) ? q.k : '';
       const off = Math.max(0, Math.min(5000, parseInt(q.off, 10) || 0));
       const n = Math.max(1, Math.min(20, parseInt(q.n, 10) || 10));

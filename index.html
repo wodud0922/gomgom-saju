@@ -447,7 +447,7 @@ function elInto(e,t){let last=0;
   if(last<t.length)e.append(document.createTextNode(t.slice(last)))}
 const SC_RE=/(?<!\d)(\d{2,3})\s?(?:점|도)(?!\d|\s?만점)|(?<=(?:연인|부부|친구|동료|동업|메이트|궁합)\s)(\d{2,3})(?![\d점도년월일세개번%])/g;
 function hiPart(e,t){let last=0;
-  t.replace(SC_RE,(m,a,b,off)=>{const v=parseInt(a||b,10);if(!(v>=0&&v<=100))return m;if(off>last)elInto(e,t.slice(last,off));const sp=document.createElement('span');sp.className='sct '+(v>=70?'g':v<=45?'c':'m');sp.textContent=m;e.append(sp);last=off+m.length;return m});
+  t.replace(SC_RE,(m,a,b,off)=>{const v=parseInt(a||b,10);if(!(v>=0&&v<=100))return m;if(off>last)elInto(e,t.slice(last,off));const sp=document.createElement('span');sp.className='sct '+(v>=67?'g':v<=45?'c':'m');sp.textContent=m;e.append(sp);last=off+m.length;return m});
   if(last<t.length)elInto(e,t.slice(last));}
 function hiEl(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;const t=normEl(String(text==null?'':text));let last=0;
   t.replace(/【([^【】\n]{1,40})】/g,(m,k,off)=>{if(off>last)hiPart(e,t.slice(last,off));const sp=document.createElement('span');sp.className='kw';hiPart(sp,k);e.append(sp);last=off+m.length;return m});
@@ -805,7 +805,7 @@ const EXD={
 '직업·적성':{v:[['회사원','g'],['전문직(자격증)','g'],['내 사업','x']],rh:'잘 맞는 직업 순위',r:['데이터 분석가','공무원 행정직','추천 전공: 통계학'],p:[50,61,57,68,72,64,59,70,66,62],y:[[2028,68,'이직·도전에 좋은 해'],[2030,72,'승진 기운이 가장 강한 해'],[2032,59,'실력을 쌓아 두는 해']],c:['3장','잘 맞는 직업 분야',['정관','문창귀인'],'정해진 규칙 안에서 꼼꼼하게 성과를 쌓을 때 빛나는 타입이야곰. 문창귀인이 있어서 글과 숫자를 다루는 일이 잘 맞아곰.','회사형과 전문직 둘 다 맞지만 혼자 하는 사업은 힘이 빠져곰.']},
 '결혼운':{v:[['30대 초반 결혼','g'],['소개로 만난 결혼','m'],['20대 결혼','x']],rh:'잘 맞는 배우자 순위',r:['닭띠, 차분하고 계획적인 사람','토 기운 많은 듬직한 사람'],p:[45,52,60,68,73,62,55,58,66,61],y:[[2027,52,'서두르면 안 되는 해'],[2029,68,'결혼 이야기가 오가는 해'],[2030,73,'결혼 인연이 가장 강한 해']],c:['3장','결혼이 들어오는 시기',['배우자 자리 육합','정관'],'결혼은 이른 쪽보다 30대 초반이 훨씬 잘 맞는 사주야곰. 배우자 자리가 찰떡 띠와 묶이는 해에 인연이 굳어져곰.','2030년 전후로 들어오는 사람은 놓치지 말자곰.']},
 '합격운':{v:[['공무원 시험','g'],['전문 자격증','m'],['취업 필기·면접','g']],rh:'나에게 맞는 공부법 순위',r:['아침 2시간 집중 암기','스터디에서 말로 설명하기'],p:[56,64,51,70,62,75,58,61,67,54],y:[[2027,64,'원서 내기 좋은 해'],[2028,51,'버티면서 실력 쌓는 해'],[2031,75,'합격 기운 최고점']],c:['2장','나에게 맞는 공부법',['정인','학당귀인'],'혼자 오래 붙잡기보다 짧게 몰아서 외울 때 머리에 잘 남는 타입이야곰. 학당귀인이 있어서 배운 걸 남에게 설명할수록 실력이 늘어곰.','시험 보기 좋은 달은 보고서 안에서 콕 집어 줄게곰.']}};
-const exCls=v=>v>=70?'g':v<=45?'x':'m',exBl=t=>'<span class="bl">'+esc(t)+'</span>';
+const exCls=v=>v>=67?'g':v<=45?'x':'m',exBl=t=>'<span class="bl">'+esc(t)+'</span>';
 const EXB={g:'✅ 딱 맞아',m:'🔸 괜찮아',x:'❌ 안 맞아'};
 function exChart(p){const W=300,H=90,xs=i=>12+i*(W-24)/9,ys=v=>H-10-(v-40)/40*(H-20),mx=Math.max(...p);
   return '<svg viewBox="0 0 '+W+' '+H+'" class="exchart" aria-hidden="true"><polyline points="'+p.map((v,i)=>xs(i).toFixed(0)+','+ys(v).toFixed(0)).join(' ')+'" class="exl"/>'+p.map((v,i)=>'<circle cx="'+xs(i).toFixed(0)+'" cy="'+ys(v).toFixed(0)+'" r="'+(v===mx?5:3.2)+'" class="exd'+(v===mx?' best':'')+'"/>').join('')+'</svg>'}
@@ -1116,7 +1116,7 @@ function fillChap(sct,ch,c,r,R){
   if(c.k==='luck')sct.append(luckBox(CTX));
   if(ch.곰)sct.append(hiEl('div','tip','🐻‍❄️ '+ch.곰));
 }
-const scCls=v=>v>=70?'g':v<=45?'c':'m';
+const scCls=v=>v>=67?'g':v<=45?'c':'m';
 function rowList(d,lines){
   const w=el('div','rows');
   d.forEach((x,i)=>{const r=el('div','yrow'+(x.now?' now':'')),c=scCls(x.v);

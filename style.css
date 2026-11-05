@@ -710,3 +710,6 @@ span.ico{font-size:inherit!important;padding:0!important;line-height:0!important
 .cn-share{margin:-4px 0 12px;font-size:13.5px;background:#fff3c4;color:#6b4a00;border-radius:12px;padding:7px 10px;text-align:center}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .cn-share{background:#3a3524;color:#ffe2a0}}
 .cn-pool.out span{color:var(--care,#d9614a);font-weight:600}
+.cn-rules{grid-column:1/-1;display:flex;flex-direction:column;gap:6px}
+.cn-rule{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px}
+.cn-rule b{flex:none;font-weight:400;font-size:13px;color:#8a5a00;background:#fff;border:1.5px solid #f2d27a;border-radius:999px;padding:1px 9px}

@@ -52,3 +52,8 @@ html[data-theme="light"] .rv-card .rv-s{color:#e6d9a8}
 @media (prefers-reduced-motion:no-preference){.ld-card{animation:ldspin 1.3s linear infinite!important}}
 @keyframes ldspin{from{transform:perspective(400px) rotateY(0)}to{transform:perspective(400px) rotateY(360deg)}}
 /* 배포 다시 하기용 표시 2026-11-06 */
+/* 성별: 여자 분홍 · 남자 하늘 */
+.seg button[data-g="m"][aria-pressed=true],.seg button[data-pg="m"][aria-pressed=true]{background:var(--sky);border-color:#b6cdee;box-shadow:0 3px 0 #b6cdee}
+.cn-rule b{border-radius:8px!important;border-color:var(--butter-d)}
+.seg button[data-g="f"][aria-pressed=true],.seg button[data-pg="f"][aria-pressed=true]{background:#f9cfdf;border-color:#eba7c0;box-shadow:0 3px 0 #eba7c0}
+.seg button[data-g="m"][aria-pressed=true],.seg button[data-pg="m"][aria-pressed=true]{background:#cfe2fb;border-color:#9fc0ec;box-shadow:0 3px 0 #9fc0ec}

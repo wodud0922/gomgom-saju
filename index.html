@@ -1410,12 +1410,12 @@ function cnSync(){const on=cnOn();$('cnIntro').hidden=!on;$('cnBar').hidden=!on|
   if(typeof buyLabel==='function')buyLabel();if(typeof tLabel==='function')tLabel();cnAskLabel();
   if(!on)return;
   const q=Math.max(1,CN.dayQuota||1),left=Math.max(0,Math.min(q,CN.dayLeft||0)),out=left<3,b=$('cnBar');b.textContent='';
-  const t=el('div','cn-t');t.append(el('b',null,cnLeftToday()?'🪙 후기 남기고 곰코인 받자곰':'🪙 곰코인으로 유료 풀이 보자곰'),el('span',null,'11월 15일까지 · 하루 3번까지 · 매일 자정 새로 풀려곰'));
+  const t=el('div','cn-t');t.append(el('b',null,cnLeftToday()?'🪙 후기 남기고 곰코인 받자곰':'🪙 오늘 곰코인 다 받았어곰'),el('span',null,'매일 자정에 새로 풀려곰'));
   const me=el('div','cn-me');me.append(el('span','cn-coin','🪙 '+CN.bal),el('span',null,'내 곰코인'));
-  const pl=el('div','cn-pool');const bar=el('i');bar.style.setProperty('--w',(out?0:left/q*100)+'%');pl.classList.toggle('out',out);pl.append(el('span',null,out?'오늘 곰코인 마감! 내일 자정에 다시 풀려곰':'오늘 풀린 곰코인 '+q+'개 중 '+left+'개 남음'),bar);
-  const rf=el('p','cn-ref','🔗 내 링크로 들어온 친구가 후기를 쓰면 나에게 🪙2코인 · '+Math.min(CN.refs,CN.refMax)+'/'+CN.refMax+'명');
-  const how=!cnLeftToday()?'오늘은 3번 다 받았어곰. 내일 또 받자곰! · 보고서·궁합·타로 3코인 · 질문 1개 1코인':out?'오늘 곰코인은 마감됐어곰. 매일 자정에 새로 풀리니까 내일 후기 쓰고 🪙3코인 받아곰!':'무료 사주 후기 쓰면 🪙3코인 → 그 코인으로 유료 풀이 보고 후기 쓰면 또 🪙3코인! (오늘 '+CN.earns+'/'+CN.earnMax+'번) · 보고서·궁합·타로 3코인 · 질문 1개 1코인';
-  b.append(t,me,pl,rf,el('p','cn-how',how))}
+  const pl=el('div','cn-pool');const bar=el('i');bar.style.setProperty('--w',(out?0:left/q*100)+'%');pl.classList.toggle('out',out);pl.append(el('span',null,out?'오늘 곰코인 마감! 자정에 다시 풀려곰':'오늘 남은 곰코인 '+left+' / '+q),bar);
+  const ru=el('div','cn-rules'),row=(txt,badge)=>{const r=el('div','cn-rule');r.append(el('span',null,txt),el('b',null,badge));return r};
+  ru.append(row('📝 후기 쓰면 🪙3개 (하루 3번까지)','오늘 '+Math.min(CN.earns,CN.earnMax)+'/'+CN.earnMax),row('🔗 내 링크로 온 친구가 후기 쓰면 🪙2개',Math.min(CN.refs,CN.refMax)+'/'+CN.refMax+'명'));
+  b.append(t,me,pl,ru)}
 function cnAskLabel(){const b=$('buyAsk');if(!b||!cnOn())return;$('packs').hidden=true;$('morePack').hidden=true;$('q').disabled=false;b.disabled=aiBusy;
   if(QLEFT<1){b.textContent='🪙 1코인으로 곰에게 물어보자곰';$('q').placeholder='예: 올해 이직해도 괜찮을까? (질문 1개 = 곰코인 1개)'}}
 async function cnSpend(kind){const m=$('payMsg');m.textContent='곰코인 쓰는 중이야곰…';

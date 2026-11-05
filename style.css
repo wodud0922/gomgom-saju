@@ -681,3 +681,6 @@ span.ico{font-size:inherit!important;padding:0!important;line-height:0!important
 .pr-sk i:nth-child(1){width:45%}.pr-sk i:nth-child(2){width:90%}.pr-sk i:nth-child(3){width:30%}
 @keyframes prSh{from{background-position:200% 0}to{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){.pr-m.pr-open,.pr-m.pr-open .pr-box,.pr-in{animation:none}}
+.pr-spin{display:flex;flex-direction:column;align-items:center;gap:10px;padding:34px 0;color:var(--sub);font-size:14px}
+.pr-spin i{width:30px;height:30px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:prRot .8s linear infinite}
+@keyframes prRot{to{transform:rotate(360deg)}}

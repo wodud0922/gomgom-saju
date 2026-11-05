@@ -1049,33 +1049,29 @@ function prCard(r){const c=el('div','pr-c'),s=Math.max(1,Math.min(5,+r.s||0));
   const top=el('div','pr-t');top.append(el('span','pr-s','★★★★★'.slice(0,s)+'☆☆☆☆☆'.slice(0,5-s)),el('span','pr-k',(r.f?'🔥 ':'')+r.k),el('span','pr-d',String(r.d||'').slice(0,5)));
   c.append(top);if(r.t)c.append(el('p','pr-x',r.t));
   const tg=el('div','pr-g');tg.append(el('span','pr-nick',r.n||'익명의 곰손님'));if(r.ev)tg.append(el('span','pr-tag ev','후기 이벤트 참여'));c.append(tg);return c}
-const PR_CACHE={};
-const prGet=(k,off,n)=>{const key=k+'|'+off+'|'+n;if(PR_CACHE[key])return PR_CACHE[key];
-  const p=fetch('/api/review?n='+n+'&off='+off+(k?'&k='+encodeURIComponent(k):'')).then(r=>r.ok?r.json():null).catch(()=>null);
-  PR_CACHE[key]=p;p.then(j=>{if(!j)delete PR_CACHE[key]});return p};
-function prWarm(j){prGet('',0,10);Object.keys(j.counts||{}).forEach(k=>prGet(k,0,10))}
+let PR_ALL=null,PR_P=null;
+const prAll=()=>PR_P||(PR_P=fetch('/api/review?all=1').then(r=>r.ok?r.json():null).then(j=>{if(j&&Array.isArray(j.list))PR_ALL=j;else PR_P=null;return PR_ALL}).catch(()=>{PR_P=null;return null}));
 function pubRv(){const w=$('pubRv');if(!w)return;
-  prGet('',0,3).then(j=>{if(!j||!Array.isArray(j.list)||!j.list.length||!j.n)return;w.textContent='';
+  prAll().then(j=>{if(!j||!j.list.length||!j.n)return;const L=j.list;w.textContent='';
     const h=el('div','pr-h');h.append(el('b',null,'곰손님 후기'),el('span','pr-avg','★ '+(+j.avg).toFixed(1)),el('span','pr-n','('+j.n+')'));w.append(h);
-    j.list.forEach(r=>w.append(prCard(r)));
-    if(j.total>3){const more=el('button','pr-all','후기 전체 보기 ('+j.total+'개) ›');more.type='button';more.addEventListener('click',()=>prOpen(j));w.append(more);
-      const warm=()=>prWarm(j);('requestIdleCallback' in window)?requestIdleCallback(warm,{timeout:2500}):setTimeout(warm,1200)}
-    w.hidden=false}).catch(()=>{})}
-function prSkel(body){body.textContent='';for(let i=0;i<3;i++){const c=el('div','pr-c pr-sk');c.append(el('i'),el('i'),el('i'));body.append(c)}}
-function prOpen(j0){const m=$('prModal'),box=m.querySelector('.pr-box'),body=m.querySelector('.pr-mb'),chips=m.querySelector('.pr-fl'),hd=m.querySelector('.pr-mh');let K='',off=0,seq=0;
-  hd.textContent='';hd.append(el('b',null,'곰손님 후기'),el('span','pr-avg','★ '+(+j0.avg).toFixed(1)),el('span','pr-n','('+j0.n+')'));
-  const kinds=[['',j0.total],...Object.entries(j0.counts||{})];
-  const drawChips=()=>{chips.textContent='';kinds.forEach(([k,c])=>{const b=el('button','pr-chip'+(k===K?' on':''),(k||'전체')+' '+c);b.type='button';b.addEventListener('click',()=>{if(K===k)return;K=k;[...chips.children].forEach(x=>x.classList.toggle('on',x===b));show(true)});chips.append(b)})};
-  const put=(j,reset)=>{const frag=document.createDocumentFragment();j.list.forEach((r,i)=>{const c=prCard(r);c.style.setProperty('--i',i);c.classList.add('pr-in');frag.append(c)});
-    if(reset){body.textContent='';box.scrollTop=0}body.querySelector('.pr-load')?.remove();body.append(frag);off+=10;
-    if(j.more){const b=el('button','pr-load','더 불러오기 ('+(j.total-off)+'개 남음)');b.type='button';b.addEventListener('click',()=>show(false));body.append(b)}};
-  const show=async reset=>{const my=++seq;if(reset)off=0;const k=K,o=off;const p=prGet(k,o,10);let ready=false;p.then(()=>{ready=true});
-    await Promise.resolve();
-    if(!ready){if(reset){body.classList.add('pr-dim');if(!body.children.length)prSkel(body)}else{const lb=body.querySelector('.pr-load');if(lb){lb.disabled=true;lb.textContent='불러오는 중이야곰…'}}}
-    const j=await p;if(my!==seq)return;body.classList.remove('pr-dim');
-    if(!j){if(reset){body.textContent=''}body.append(el('p','pr-demo','후기를 불러오지 못했어곰. 잠시 뒤에 다시 눌러 줘곰'));return}
-    put(j,reset);if(j.more)prGet(k,o+10,10)};
-  drawChips();body.textContent='';show(true);m.hidden=false;m.classList.remove('pr-open');void m.offsetWidth;m.classList.add('pr-open');document.body.style.overflow='hidden';prWarm(j0)}
+    L.slice(0,3).forEach(r=>w.append(prCard(r)));
+    if(L.length>3){const more=el('button','pr-all','후기 전체 보기 ('+L.length+'개) ›');more.type='button';more.addEventListener('click',()=>prOpen());w.append(more)}
+    w.hidden=false})}
+function prSpin(body){body.textContent='';const d=el('div','pr-spin');d.append(el('i'),el('span',null,'후기 불러오는 중이야곰…'));body.append(d)}
+async function prOpen(){const m=$('prModal'),box=m.querySelector('.pr-box'),body=m.querySelector('.pr-mb'),chips=m.querySelector('.pr-fl'),hd=m.querySelector('.pr-mh');
+  m.hidden=false;m.classList.remove('pr-open');void m.offsetWidth;m.classList.add('pr-open');document.body.style.overflow='hidden';box.scrollTop=0;
+  let j=PR_ALL;if(!j){chips.textContent='';hd.textContent='';hd.append(el('b',null,'곰손님 후기'));prSpin(body);j=await prAll();if(m.hidden)return;
+    if(!j){body.textContent='';body.append(el('p','pr-demo','후기를 불러오지 못했어곰. 잠시 뒤에 다시 열어 줘곰'));return}}
+  const L=j.list;let K='',shown=10;
+  hd.textContent='';hd.append(el('b',null,'곰손님 후기'),el('span','pr-avg','★ '+(+j.avg).toFixed(1)),el('span','pr-n','('+j.n+')'));
+  const cnt={};L.forEach(r=>{cnt[r.k]=(cnt[r.k]||0)+1});const kinds=[['',L.length],...Object.entries(cnt).sort((a,b)=>b[1]-a[1])];
+  const draw=(from)=>{const rows=L.filter(r=>!K||r.k===K);if(from===0){body.textContent='';box.scrollTop=0}
+    body.querySelector('.pr-load')?.remove();
+    rows.slice(from,shown).forEach((r,n)=>{const c=prCard(r);c.classList.add('pr-in');c.style.setProperty('--i',n);body.append(c)});
+    if(rows.length>shown){const b=el('button','pr-load','더 불러오기 ('+(rows.length-shown)+'개 남음)');b.type='button';b.addEventListener('click',()=>{const f=shown;shown+=10;draw(f)});body.append(b)}};
+  chips.textContent='';kinds.forEach(([k,c])=>{const b=el('button','pr-chip'+(k===K?' on':''),(k||'전체')+' '+c);b.type='button';
+    b.addEventListener('click',()=>{if(K===k)return;K=k;shown=10;[...chips.children].forEach(x=>x.classList.toggle('on',x===b));draw(0)});chips.append(b)});
+  draw(0)}
 function prClose(){$('prModal').hidden=true;document.body.style.overflow=''}
 document.addEventListener('click',e=>{const m=$('prModal');if(!m||m.hidden)return;if(e.target===m||e.target.closest('.pr-x2'))prClose()});
 document.addEventListener('keydown',e=>{const m=$('prModal');if(e.key==='Escape'&&m&&!m.hidden)prClose()});

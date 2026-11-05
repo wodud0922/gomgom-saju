@@ -540,3 +540,10 @@ span.ico{font-size:inherit!important;padding:0!important;line-height:0!important
 .pv-body details.sec>summary::after{content:"";position:absolute;right:8px;top:50%;width:8px;height:8px;border-right:2px solid var(--sub);border-bottom:2px solid var(--sub);transform:translateY(-70%) rotate(45deg);transition:transform .2s}
 .pv-body details.sec[open]>summary::after{transform:translateY(-30%) rotate(-135deg)}
 .pv-body .sec-b{padding:0 2px 12px}
+
+/* 타로 5장 십자 배치 */
+.tslots{grid-template-columns:repeat(3,1fr)!important;grid-template-areas:". t3 ." "t2 t1 t4" ". t5 .";gap:6px 8px!important;max-width:330px;margin-left:auto!important;margin-right:auto!important}
+.tslot:nth-child(1){grid-area:t1}.tslot:nth-child(2){grid-area:t2}.tslot:nth-child(3){grid-area:t3}.tslot:nth-child(4){grid-area:t4}.tslot:nth-child(5){grid-area:t5}
+.tslot .tph,.tslot .tcard{max-width:84px}
+.tslot .tpl{min-height:0!important;font-size:12.5px}
+.tslot:nth-child(1) .tph,.tslot:nth-child(1) .tcard{box-shadow:0 0 0 3px rgba(255,209,102,.55);border-radius:12px}

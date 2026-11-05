@@ -35,14 +35,15 @@
 <ul class="feat"><li><b>무료</b>로 생년월일만 넣으면 내 사주 전체 풀이</li><li>모르는 말은 <b>눌러 보면 바로</b> 쉬운 설명</li><li>다정한 곰이나 매운맛 불곰이 연애·돈·일·타로까지</li></ul>
 <label class="agree"><input type="checkbox" id="agreeChk"><span>[필수] 만 14세 이상이며, 개인정보 수집·이용에 동의해요</span></label>
 <details class="agree-d"><summary>내용 보기</summary><div>
-<p><b>수집 항목</b> 이름(별명 가능), 성별, 생년월일, 태어난 시간, 태어난 곳. 유료 풀이를 이용하면 궁합 상대의 이름·성별·생년월일·태어난 시간, 질문·고민 내용, 고른 타로 카드</p>
+<p><b>수집 항목</b> 이름(별명 가능), 성별, 생년월일, 태어난 시간, 태어난 곳. 유료 풀이를 이용하면 궁합 상대의 이름·성별·생년월일·태어난 시간, 질문·고민 내용, 고른 타로 카드. 후기를 남기면 별점과 후기 내용</p>
 <p><b>이용 목적</b> 사주·궁합·타로 풀이 제공</p>
-<p><b>보유 기간</b> 저장하지 않아요. 무료 사주는 내 기기 화면 안에서만 계산하고, 유료 풀이는 풀이를 만드는 동안에만 처리해요.</p>
-<p><b>처리 위탁·국외 이전</b> 유료 풀이 작성 처리를 위해 Anthropic, PBC(미국)로, 사이트 운영을 위해 Vercel Inc.(미국)로 암호화된 통신으로 전송돼요. 유료 풀이를 이용하지 않으면 국외로 전송되지 않아요.</p>
+<p><b>보유 기간</b> 저장하지 않아요. 무료 사주는 내 기기 화면 안에서만 계산하고, 유료 풀이는 풀이를 만드는 동안에만 처리해요. 후기는 작성일로부터 2년 동안 보관해요.</p>
+<p><b>처리 위탁·국외 이전</b> 유료 풀이 작성 처리를 위해 Anthropic, PBC(미국)로, 사이트 운영을 위해 Vercel Inc.(미국)로, 후기 저장을 위해 Upstash, Inc.(일본 서버)로 암호화된 통신으로 전송돼요. 유료 풀이와 후기를 이용하지 않으면 국외로 전송되지 않아요.</p>
 <p><b>거부할 권리</b> 동의하지 않을 수 있지만, 그러면 사주 풀이를 볼 수 없어요.</p>
 <p><a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침 전체 보기</a></p>
 </div></details>
 <button class="btn" id="startBtn" type="button">사주 보러 가기</button>
+<div class="pr" id="pubRv" hidden></div>
 </section>
 <section class="card" id="form" hidden>
 <div class="field"><label for="nm">이름 (별명도 좋아곰)</label><input id="nm" maxlength="12" placeholder="예: 곰돌이" autocomplete="off"></div>
@@ -90,6 +91,7 @@
 <section class="card" id="s-sy"></section>
 <section class="card" id="s-wy"></section>
 <section class="card" id="s-mt"></section>
+<div id="s-rv"></div>
 <section class="card">
 <h2>친구에게 자랑하기</h2>
 <button class="btn" id="linkBtn" type="button">🔗 내 사주 링크 보내기</button>
@@ -140,6 +142,7 @@
 </div><div class="ex-dots"></div><p class="ex-hint">옆으로 넘기면 보고서 예시가 나와곰 →</p></div>
 <div class="field" id="statusF" hidden><label for="status">지금 나는</label><select id="status"><option value="">선택 안 함</option><option>고등학생 (수험생)</option><option>대학생</option><option>취업 준비생</option><option>직장인</option><option>자영업·프리랜서</option><option>기타</option></select></div>
 <div class="field" id="examF" hidden><label for="exam">준비하는 시험</label><select id="exam"><option value="">선택 안 함</option><option>수능·대학 입시</option><option>공무원 시험</option><option>전문 자격증 (변호사·회계사 등)</option><option>일반 자격증·어학 시험</option><option>취업 (필기·면접)</option><option>승진·사내 시험</option><option>기타</option></select></div>
+<p class="rv-pre">🎁 다 보고 후기 쓰면 <b>곰 질문 1개</b> 선물!</p>
 <button class="btn" type="button" id="buyTopic">890원으로 연애운 열어보자곰</button>
 </div>
 <div id="tab-gung" class="tabp" hidden>
@@ -169,6 +172,7 @@
 <p><span class="bl">이럴 땐 하루 지나고 다시 얘기하는 규칙을 정하면 오래 가곰.</span></p>
 <p class="ex-cap">다툼 포인트와 푸는 법, 올해와 내년 흐름까지 나와곰</p></div>
 </div><div class="ex-dots"></div><p class="ex-hint">옆으로 넘기면 궁합 보고서 예시가 나와곰 →</p></div>
+<p class="rv-pre">🎁 다 보고 후기 쓰면 <b>곰 질문 1개</b> 선물!</p>
 <button class="btn" type="button" id="buyGung">890원으로 궁합 보자곰</button>
 </div>
 <div id="tab-ask" class="tabp" hidden>
@@ -200,6 +204,7 @@
 <div class="ex-slide exs"><span class="ex-tag">예시 · 미리보기</span><p class="tq1" style="margin:0">“이번에 고백하면 잘 될까?”</p><div class="trow"><div class="tmini"><div class="tfw"><img src="tarot/m19.jpg" alt="태양 · 정방향" loading="lazy"></div></div><div class="ttx"><span class="tpl">1. 지금 상황</span><b class="tnm">태양 · 정방향</b><p><span class="bl">서로 호감이 이미 밖으로 드러나 있는 상태라 분위기는 충분히 무르익었어곰.</span></p><div class="tsaju"><b>🐾 사주 한 스푼</b><p><span class="bl">올해 들어온 기운이 인연 자리를 건드려서 관계가 한 단계 나아가기 좋은 해야곰.</span></p></div></div></div><p class="ex-cap">카드마다 고민에 맞춘 풀이와 내 사주와 이어지는 사주 한 스푼이 붙어곰</p></div>
 <div class="ex-slide exs"><span class="ex-tag">예시 · 미리보기</span><p class="one1 ex-tone" style="margin:0;text-align:center" data-soft="응, 다음 달 안에 마음을 전하면 잘 될 가능성이 커곰." data-fire="다음 달 안에 고백해라. 질질 끌다가 놓치면 그건 순전히 네 탓이다.">응, 다음 달 안에 마음을 전하면 잘 될 가능성이 커곰.</p><div class="ab"><b>🔮 다섯 장을 이어 보면</b><p><span class="bl">지금 분위기와 상대 마음이 같은 쪽을 보고 있어서 망설일수록 기회가 줄어들어곰. 가볍게 시작하면 오래 가는 흐름이야곰.</span></p></div><div class="ab"><b>⏰ 언제?</b><p><span class="bl">12월 초, 둘만 있는 자리</span></p></div><div class="ab"><b>✅ 이렇게 해보자곰</b><ul><li><span class="bl">이번 주에 먼저 밥 약속 잡기</span></li><li><span class="bl">부담 없는 말로 마음 전하기</span></li></ul></div><p class="ex-cap">결론, 좋은 시기, 지금 할 일까지 딱 정리해줘곰</p></div>
 </div></div>
+<p class="rv-pre">🎁 다 보고 후기 쓰면 <b>곰 질문 1개</b> 선물!</p>
 <button class="btn" type="button" id="buyTarot">890원으로 타로 보자곰</button>
 </div>
 <div id="tarotStage" hidden></div>
@@ -214,6 +219,7 @@
 <div class="loading" id="loading" hidden role="status" aria-live="polite"><div class="ld-box"><img src="bear.svg" width="110" height="95" alt="" class="ld-bear"><p id="ldTxt"></p><div class="ld-bar"><i></i></div></div></div>
 <dialog id="dlg"><div class="dlg"><h4 id="dT"></h4><p class="one" id="dO"></p><div id="dB"></div><button class="btn" type="button" id="dX">알겠어곰</button></div></dialog>
 
+<div id="rvSheet" class="rv-sh" hidden role="dialog" aria-modal="true" aria-label="후기 남기기"><div class="rv-pan"><button type="button" class="rv-x" aria-label="닫기">✕</button><div id="rvBody"></div></div></div>
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -662,6 +668,7 @@ function run(){
   cardData={P:P.map((p,i)=>[POS[i][0],p?GAN[p.g]:'',p?ZHI[p.z]:'']),cnt:Object.fromEntries(ELS.map((e,i)=>[e,A.cnt[i]])),known,dgName:GK[dm]+EK[GE[dm]]+'('+GAN[dm]+GE[dm]+')',dgText:DM[GAN[dm]][0]+' 같은 사람이곰. '+DM[GAN[dm]][1]};
   CTX={name,gender,P,A,SL,RL,tgc,stTxt,DY,curDY,curY,SY,WY,curWY};
   $('aiOut').textContent='';$('payMsg').textContent='';BUSY.clear();syncBuy();for(const k in MEMO)delete MEMO[k];GUNGP=null;QH={soft:[],fire:[]};if(typeof tarotReset==='function')tarotReset();if($('chat'))$('chat').textContent='';setQ(0);
+  if(typeof rvReset==='function')rvReset();
   $('sharePrev').hidden=true;
   $('res').hidden=false;$('hintBar').hidden=false;
   $('fbName').textContent=name+'님';$('fbMeta').textContent=(cal==='solar'?'양력 ':cal==='leap'?'음력(윤달) ':'음력 ')+y+'.'+m+'.'+d+(known?' '+$('tm').value:' · 시간 모름')+' · '+(gender==='m'?'남':'여')+' · '+$('city').options[$('city').selectedIndex].text;setForm(false);
@@ -971,6 +978,80 @@ function verdictBox(r,kind){
   return w;
 }
 /* ----- 보고서 엔진 ----- */
+/* ----- 후기 남기기 (서버 /api/review 에 저장) ----- */
+const RV_TXT={1:'별로였어곰…',2:'아쉬웠어곰',3:'그럭저럭이었어곰',4:'좋았어곰!',5:'완전 찰떡이었어곰!'};
+function reviewCard(kind,fire,onSent,reward){
+  const w=el('div','rv'+(fire?' fire':''));let star=0;
+  w.append(el('b','rv-h',fire?'🔥 불곰 풀이, 솔직히 어땠냐':'🐻‍❄️ 곰 풀이 어땠어곰?'));
+  if(reward)w.append(el('p','rv-gift',fire?'🎁 후기 쓰면 질문 1개 준다 (별점 상관없음)':'🎁 후기 쓰면 질문 1개 선물 (별점 상관없어곰)'));
+  const st=el('div','rv-st');st.setAttribute('role','radiogroup');st.setAttribute('aria-label','별점');
+  const lab=el('p','rv-l','별을 눌러 줘곰');
+  const paint=n=>[...st.children].forEach((b,i)=>b.classList.toggle('on',i<n));
+  for(let i=1;i<=5;i++){const b=el('button','rv-s','★');b.type='button';b.setAttribute('aria-label',i+'점');
+    b.addEventListener('click',()=>{star=i;paint(i);lab.textContent=RV_TXT[i];send.disabled=false});
+    b.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')paint(i)});b.addEventListener('pointerleave',()=>paint(star));st.append(b)}
+  if(RV_PRESET){const pi=RV_PRESET;RV_PRESET=0;setTimeout(()=>st.children[pi-1].click(),0)}
+  const ta=el('textarea','rv-t');ta.maxLength=100;ta.rows=2;ta.placeholder=fire?'한 줄로 까든 칭찬하든 해봐 (선택)':'한 줄 후기도 남겨 줄래곰? (선택)';
+  const cnt=el('span','rv-c','0/100');ta.addEventListener('input',()=>cnt.textContent=ta.value.length+'/100');
+  const send=el('button','btn rv-b','후기 보내기');send.type='button';send.disabled=true;
+  const err=el('p','rv-err','');
+  send.addEventListener('click',async()=>{
+    if(!star||send.disabled&&send.dataset.busy)return;send.disabled=true;send.dataset.busy='1';send.textContent='보내는 중…';err.textContent='';
+    let ok=false;try{const r=await fetch('/api/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'submit',k:kind,s:star,t:ta.value.trim(),f:fire?1:0})});const j=await r.json().catch(()=>({}));ok=r.ok&&j.ok;if(!ok)err.textContent=j.error||'후기를 못 보냈어곰. 다시 눌러 줘곰'}catch(e){err.textContent='인터넷 연결을 확인하고 다시 눌러 줘곰'}
+    if(!ok){send.disabled=false;delete send.dataset.busy;send.textContent='후기 보내기';return}
+    w.textContent='';w.classList.add('done');
+    w.append(el('b','rv-h',fire?'🔥 후기 받았다. 고맙다 진짜로':'🐾 고마워곰! 후기 잘 받았어곰'),
+      el('div','rv-st sm','★★★★★'.slice(0,star)+'☆☆☆☆☆'.slice(0,5-star)),
+      el('p','rv-l',(ta.value.trim()?'“'+ta.value.trim()+'” · ':'')+kind));
+    if(reward){setQ(QLEFT+1);const g=el('div','rv-got');g.append(el('b',null,fire?'🎁 질문 1개 꽂아 줬다':'🎁 곰에게 질문 1개 받았어곰!'));const go=el('button','btn ghost rv-go',fire?'지금 바로 물어보기':'질문하러 가기곰');go.type='button';go.addEventListener('click',()=>{rvClose();document.querySelector('[data-tab="ask"]').click();$('tab-ask').scrollIntoView({behavior:'smooth',block:'start'})});g.append(go);w.append(g)}
+    if(onSent)onSent(reward)});
+  w.append(st,lab,ta,el('div','rv-f',''));w.lastChild.append(cnt,send);w.append(err);
+  w.append(el('p','rv-n','이름·연락처는 쓰지 말아줘곰. 후기는 곰이 확인한 뒤 익명으로 사이트에 소개될 수 있어곰.'));
+  return w}
+/* 후기 버튼 + 시트 */
+let RV_ITEMS=[],RV_DONE=new Set(),RV_SEL=null;
+const rvId=(k,f)=>k+'|'+(f?'f':'s'),rvK=id=>id.split('|')[0],rvF=id=>id.endsWith('|f');
+const rvLab=id=>(rvF(id)?'🔥 ':'')+rvK(id);
+function rvStrip(id){const b=el('button','rv-strip');b.type='button';b.dataset.rv=id;rvStripTxt(b);b.addEventListener('click',()=>{if(RV_DONE.has(id))return;RV_SEL=id;rvOpen()});return b}
+function rvStripTxt(b){const id=b.dataset.rv,done=RV_DONE.has(id),paid=rvK(id)!=='무료 사주',fire=rvF(id);b.classList.toggle('done',done);b.classList.toggle('gift',paid&&!done);
+  b.innerHTML='';b.append(el('span','rv-si',done?'✓':paid?'🎁':'⭐'),el('span','rv-st2',done?(fire?'후기 접수 완료. 고맙다':'후기 고마워곰!'):paid?(fire?'불곰 풀이 어땠냐? 후기 쓰고 질문 1개 받아':'이 풀이 어땠어곰? 후기 쓰고 질문 1개 받기'):'사주 풀이 어땠어곰? 한 줄 후기 남기기'),el('span','rv-ar',done?'':'›'))}
+let RV_PRESET=0;
+function rvCard(id){const c=el('section','card rv-card');c.dataset.rv=id;rvCardTxt(c);return c}
+function rvCardTxt(c){const id=c.dataset.rv,done=RV_DONE.has(id);c.textContent='';c.classList.toggle('done',done);
+  if(done){c.append(el('b','rv-h','🐾 후기 고마워곰!'),el('p','rv-cs','남겨 준 후기는 곰이 꼭꼭 읽어볼게곰'));return}
+  c.append(el('b','rv-h','🐻‍❄️ 곰 사주 풀이, 어땠어곰?'),el('p','rv-cs','별만 눌러도 후기가 돼곰. 10초면 끝나곰!'));
+  const st=el('div','rv-st');for(let i=1;i<=5;i++){const b=el('button','rv-s','★');b.type='button';b.setAttribute('aria-label',i+'점');
+    b.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')[...st.children].forEach((x,k)=>x.classList.toggle('on',k<i))});
+    b.addEventListener('pointerleave',()=>[...st.children].forEach(x=>x.classList.remove('on')));
+    b.addEventListener('click',()=>{[...st.children].forEach((x,k)=>x.classList.toggle('on',k<i));RV_SEL=id;RV_PRESET=i;setTimeout(rvOpen,180)});st.append(b)}
+  c.append(st)}
+function rvFabSync(){document.querySelectorAll('.rv-strip').forEach(rvStripTxt);document.querySelectorAll('.rv-card').forEach(rvCardTxt)}
+function rvReset(){RV_ITEMS=[rvId('무료 사주',false)];RV_DONE=new Set();RV_SEL=null;const s=$('s-rv');s.textContent='';s.append(rvCard(RV_ITEMS[0]))}
+function rvAdd(k,fire){const id=rvId(k,!!fire);RV_ITEMS=RV_ITEMS.filter(x=>x!==id);RV_ITEMS.push(id);RV_DONE.delete(id);RV_SEL=null;rvFabSync();return rvStrip(id)}
+function rvDraw(){const b=$('rvBody');b.textContent='';
+  if(!RV_SEL||!RV_ITEMS.includes(RV_SEL))RV_SEL=[...RV_ITEMS].reverse().find(x=>!RV_DONE.has(x))||RV_ITEMS[RV_ITEMS.length-1];
+  const sel=RV_SEL,fire=rvF(sel),paid=rvK(sel)!=='무료 사주';
+  if(RV_ITEMS.length>1){const c=el('div','rv-chips');c.append(el('span','rv-q','어떤 풀이 후기야?'));
+    RV_ITEMS.forEach(id=>{const done=RV_DONE.has(id),x=el('button','rv-chip'+(id===sel?' on':''),(done?'✓ ':'')+rvLab(id)+(rvK(id)!=='무료 사주'&&!done?' 🎁':''));x.type='button';x.addEventListener('click',()=>{RV_SEL=id;rvDraw()});c.append(x)});b.append(c)}
+  if(RV_DONE.has(sel)){b.append(el('p','rv-l rv-did','“'+rvK(sel)+'” 후기는 이미 남겼어곰. 고마워곰! 🐾'));return}
+  const card=reviewCard(rvK(sel),fire,rw=>{RV_DONE.add(sel);rvFabSync();const ch=b.querySelector('.rv-chip.on');if(ch)ch.textContent='✓ '+rvLab(sel);if(rw)return;const nx=RV_ITEMS.find(x=>!RV_DONE.has(x));setTimeout(()=>{if(!$('rvSheet').hidden&&RV_SEL===sel){if(nx){RV_SEL=nx;rvDraw()}else rvClose()}},1400)},paid);
+  b.append(card)}
+function rvOpen(){rvDraw();$('rvSheet').hidden=false;document.body.style.overflow='hidden'}
+function rvClose(){$('rvSheet').hidden=true;document.body.style.overflow=''}
+$('rvSheet').addEventListener('click',e=>{if(e.target.id==='rvSheet'||e.target.closest('.rv-x'))rvClose()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('rvSheet').hidden)rvClose()});
+/* ----- 곰손님 후기 (내가 공개한 후기만) ----- */
+function pubRv(){const w=$('pubRv');if(!w)return;
+  fetch('/api/review').then(r=>r.ok?r.json():null).then(j=>{if(!j||!Array.isArray(j.list)||!j.list.length||!j.n)return;let open=false;const L=j.list;
+    const draw=()=>{w.textContent='';
+      const h=el('div','pr-h');h.append(el('b',null,'곰손님 후기'),el('span','pr-avg','★ '+(+j.avg).toFixed(1)),el('span','pr-n','('+j.n+')'));w.append(h);
+      L.slice(0,open?L.length:3).forEach(r=>{const c=el('div','pr-c'),s=Math.max(1,Math.min(5,+r.s||0));
+        const top=el('div','pr-t');top.append(el('span','pr-s','★★★★★'.slice(0,s)+'☆☆☆☆☆'.slice(0,5-s)),el('span','pr-k',(r.f?'🔥 ':'')+r.k),el('span','pr-d',String(r.d||'').slice(0,5)));
+        c.append(top);if(r.t)c.append(el('p','pr-x',r.t));
+        const tg=el('div','pr-g');tg.append(el('span','pr-nick',r.n||'익명의 곰손님'));if(r.ev)tg.append(el('span','pr-tag ev','후기 이벤트 참여'));c.append(tg);w.append(c)});
+      if(L.length>3){const more=el('button','pr-more',open?'접기 ▴':'후기 더 보기 ▾');more.type='button';more.addEventListener('click',()=>{open=!open;draw()});w.append(more)}};
+    draw();w.hidden=false}).catch(()=>{})}
+setTimeout(pubRv,0);
 async function makeReport(btn,R){
   if(!CTX)return;if(BUSY.has(R.key)){$('payMsg').textContent='곰이 이 보고서를 아직 쓰는 중이야곰. 조금만 기다려 줘곰';return}
   BUSY.add(R.key);syncBuy();
@@ -1020,7 +1101,7 @@ async function makeReport(btn,R){
   };
   let next=0;await Promise.all([0,1].map(async()=>{while(next<groups.length){const gi=next++;await runGroup(groups[gi],gi)}}));
   prog.remove();BUSY.delete(R.key);syncBuy();
-  if(fail<groups.length){if(R.done)R.done();if(fail)m.textContent='일부 장을 가져오지 못했어곰. 그 장의 "다시 써 줘곰" 버튼을 눌러 줘곰.'}
+  if(fail<groups.length){box.append(rvAdd(R.kind,curTone==='fire'));if(R.done)R.done();if(fail)m.textContent='일부 장을 가져오지 못했어곰. 그 장의 "다시 써 줘곰" 버튼을 눌러 줘곰.'}
   else if(!m.textContent)m.textContent=errTxt();
 }
 function fillChap(sct,ch,c,r,R){
@@ -1264,6 +1345,7 @@ function tShow(T){
   if(r.시기){const t=el('div','ab');t.append(el('b',null,'⏰ 언제?'),hiEl('p',null,r.시기));box.append(t)}
   if(Array.isArray(r.할일)&&r.할일.length){const t=el('div','ab');t.append(el('b',null,fire?'✅ 당장 이거 해라':'✅ 이렇게 해보자곰'));const ul=el('ul');r.할일.slice(0,4).forEach(x=>ul.append(hiEl('li',null,x)));t.append(ul);box.append(t)}
   box.append(el('p','muted','타로는 지금 마음과 흐름을 비춰 보는 거울이야곰. 결정은 언제나 내가 하는 거야곰.'));
+  box.append(rvAdd('타로',fire));
   const again=el('button','btn ghost','다른 고민으로 또 보기 (890원)');again.type='button';again.addEventListener('click',()=>{tarotClear(T.tone);$('tq').value='';$('tqn').textContent=0;$('tab-tarot').scrollIntoView({behavior:'smooth'})});box.append(again);
   o.append(box);showRep(curKey());T.busy=false;
   const m=T.el.querySelector('.tmsg');if(m)m.textContent='곰이 카드를 다 읽었어곰! 아래 풀이를 봐곰';

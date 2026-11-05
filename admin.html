@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>곰곰 후기 관리</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{--bg:#e9f2fa;--card:#fff;--ink:#34415a;--sub:#66768f;--line:#d3e0ee;--mist:#f2f7fc;--accent:#2f7fc8;--good:#2e9a5e;--care:#d9614a;--star:#f0b400;color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#18202c;--card:#242f43;--ink:#eaf0f7;--sub:#a3b1c7;--line:#3b4a63;--mist:#1e2839;--accent:#7fbcf0;--good:#6fd39a;--care:#ff9b85;--star:#ffc93c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#18202c;--card:#242f43;--ink:#eaf0f7;--sub:#a3b1c7;--line:#3b4a63;--mist:#1e2839;--accent:#7fbcf0;--good:#6fd39a;--care:#ff9b85;--star:#ffc93c;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Pretendard","Apple SD Gothic Neo","Noto Sans KR",sans-serif;word-break:keep-all}
+main{max-width:760px;margin:0 auto;padding:20px 16px 48px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:16px}
+h1{font-size:21px;margin:0}
+.demo{font-size:12.5px;color:var(--sub);margin:4px 0 14px}
+/* 로그인 */
+#login{max-width:360px;margin:12vh auto 0;text-align:center}
+#login p{color:var(--sub);font-size:14px;margin:6px 0 14px}
+input,button{font:inherit}
+#code{width:100%;padding:11px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--mist);color:var(--ink);font-size:16px;text-align:center;letter-spacing:3px}
+.btn{width:100%;margin-top:10px;padding:11px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:16px;cursor:pointer}
+/* 통계 */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.st{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:10px;text-align:center}
+.st b{display:block;font-size:22px;font-weight:600}.st span{font-size:12.5px;color:var(--sub)}
+.st .y{color:var(--star)}
+.topics{margin-bottom:10px}
+.topics h2{font-size:15px;margin:0 0 8px;font-weight:600}
+.tp{display:grid;grid-template-columns:78px 1fr 64px;gap:8px;align-items:center;font-size:13.5px;margin:5px 0}
+.tp i{display:block;height:9px;border-radius:6px;background:var(--mist);overflow:hidden}
+.tp i u{display:block;height:100%;background:var(--star);border-radius:6px}
+.tp em{font-style:normal;color:var(--sub);text-align:right;font-variant-numeric:tabular-nums}
+/* 목록 */
+.bar{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 8px}
+.f{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:5px 12px;font-size:13.5px;cursor:pointer}
+.f[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--mist)}
+.f small{color:var(--sub);margin-left:2px}
+.rv{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:11px 13px;margin:8px 0}
+.rv.hide{opacity:.55}
+.top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+.stars{color:var(--star);letter-spacing:1px;font-size:14.5px}
+.k{color:var(--accent)}.when{margin-left:auto;color:var(--sub);font-variant-numeric:tabular-nums}
+.txt{margin:6px 0;font-size:14.5px}.txt.none{color:var(--sub);font-style:italic}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--sub)}
+.tag{border:1px solid var(--line);border-radius:999px;padding:0 8px}
+.tag.buy{color:var(--good);border-color:currentColor}
+.st-l{font-weight:600}.st-l.wait{color:#c48a00}.st-l.on{color:var(--good)}.st-l.off{color:var(--care)}
+.acts{display:flex;gap:6px;margin-top:8px}
+.acts button{flex:1;padding:7px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font-size:14px;cursor:pointer}
+.acts .pub{border-color:var(--good);color:var(--good)}.acts .hid{border-color:var(--care);color:var(--care)}
+.acts button:disabled{opacity:.35;cursor:default}
+.empty{text-align:center;color:var(--sub);padding:24px 0}
+.msg{min-height:1.2em;color:var(--care);font-size:14px;margin:10px 0 0}
+.lnk{background:none;border:0;padding:0;color:var(--accent);font:inherit;font-size:12.5px;cursor:pointer;text-decoration:underline}
+@media (max-width:420px){.st b{font-size:19px}.tp{grid-template-columns:70px 1fr 58px}}
+</style>
+</head>
+<body>
+<main>
+<section id="login" class="card">
+<h1>🐻‍❄️ 곰곰 사주 관리자</h1>
+<p>관리자 비밀번호를 입력해 줘곰</p>
+<input id="code" type="password" placeholder="••••••" autocomplete="off">
+<button class="btn" id="enter" type="button">들어가기</button>
+<p class="msg" id="msg"></p>
+</section>
+
+<section id="dash" hidden>
+<h1>후기 관리</h1>
+<p class="demo">공개하기를 누른 후기만 사이트 첫 화면 "곰손님 후기"에 나와요. 평균 별점도 공개한 후기로만 계산돼요. <button type="button" id="reload" class="lnk">새로고침</button> · <button type="button" id="out" class="lnk">나가기</button></p>
+<div class="stats">
+<div class="st"><b class="y" id="sAvg">-</b><span>평균 별점</span></div>
+<div class="st"><b id="sAll">-</b><span>전체 후기</span></div>
+<div class="st"><b id="sWait">-</b><span>공개 대기</span></div>
+</div>
+<div class="card topics"><h2>풀이별 평균 별점</h2><div id="tps"></div></div>
+<div class="bar" id="bar"></div>
+<div id="list"></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+let RV=[],CODE="";
+const ST={wait:['공개 대기','wait'],on:['공개 중','on'],off:['숨김','off']};
+let F='all';
+const stars=n=>'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n);
+function draw(){
+  const avg=RV.length?RV.reduce((a,x)=>a+x.s,0)/RV.length:0;
+  $('sAvg').textContent=RV.length?'★ '+avg.toFixed(1):'-';$('sAll').textContent=RV.length;$('sWait').textContent=RV.filter(x=>x.st==='wait').length;
+  const g={};RV.forEach(x=>{(g[x.k]=g[x.k]||[]).push(x.s)});
+  $('tps').textContent='';Object.entries(g).sort((a,b)=>b[1].length-a[1].length).forEach(([k,v])=>{const m=v.reduce((a,b)=>a+b,0)/v.length,r=el('div','tp'),bar=el('i'),u=el('u');u.style.width=(m/5*100)+'%';bar.append(u);r.append(el('span',null,k),bar,el('em',null,'★'+m.toFixed(1)+' · '+v.length));$('tps').append(r)});
+  const fs=[['all','전체',RV.length],['wait','공개 대기',RV.filter(x=>x.st==='wait').length],['on','공개 중',RV.filter(x=>x.st==='on').length],['off','숨김',RV.filter(x=>x.st==='off').length],['low','별 1~2개',RV.filter(x=>x.s<=2).length]];
+  $('bar').textContent='';fs.forEach(([k,l,n])=>{const b=el('button','f',l);b.type='button';b.setAttribute('aria-pressed',F===k);b.append(el('small',null,n));b.addEventListener('click',()=>{F=k;draw()});$('bar').append(b)});
+  const L=$('list');L.textContent='';
+  const rows=RV.filter(x=>F==='all'||(F==='low'?x.s<=2:x.st===F));
+  if(!rows.length){L.append(el('p','empty','여기엔 후기가 없어곰'));return}
+  rows.forEach(x=>{const c=el('div','rv'+(x.st==='off'?' hide':''));
+    const top=el('div','top');top.append(el('span','stars',stars(x.s)),el('span','k',(x.f?'🔥 ':'')+x.k),el('span','st-l '+ST[x.st][1],ST[x.st][0]),el('span','when',x.at));
+    const meta=el('div','meta');meta.append(el('span','tag',x.k==='무료 사주'?'무료':'유료 풀이'));if(x.ev)meta.append(el('span','tag','후기 이벤트 참여 · 질문 1개 지급'));
+    const acts=el('div','acts'),p=el('button','pub','공개하기'),h=el('button','hid','숨기기');p.type=h.type='button';p.disabled=x.st==='on';h.disabled=x.st==='off';
+    p.addEventListener('click',()=>setSt(x,'on',p,h));h.addEventListener('click',()=>setSt(x,'off',p,h));acts.append(p,h);
+    c.append(top,el('p','txt'+(x.t?'':' none'),x.t||'(별점만 남김)'),meta,acts);L.append(c)});
+}
+async function api(body){const r=await fetch('/api/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({code:CODE},body))});const j=await r.json().catch(()=>({}));if(!r.ok)throw j;return j}
+async function load(){const j=await api({action:'admin'});RV=j.list||[];draw()}
+async function setSt(x,st,p,h){p.disabled=h.disabled=true;try{const j=await api({action:'set',id:x.id,st});RV=j.list||RV;draw()}catch(e){alertMsg(e.error||'바꾸지 못했어곰');draw()}}
+function alertMsg(t){const m=el('p','msg',t);$('list').prepend(m);setTimeout(()=>m.remove(),3000)}
+async function enter(){CODE=$('code').value.trim();if(!CODE)return;$('msg').textContent='';$('enter').disabled=true;
+  try{await load();try{sessionStorage.setItem('gg_admin',CODE)}catch(e){}$('login').hidden=true;$('dash').hidden=false}
+  catch(e){$('msg').textContent=e&&e.error||'들어가지 못했어곰'}finally{$('enter').disabled=false}}
+$('reload').addEventListener('click',()=>load().catch(e=>alertMsg(e.error||'못 불러왔어곰')));
+$('out').addEventListener('click',()=>{try{sessionStorage.removeItem('gg_admin')}catch(e){}CODE='';RV=[];$('code').value='';$('dash').hidden=true;$('login').hidden=false});
+try{const c=sessionStorage.getItem('gg_admin');if(c){$('code').value=c;enter()}}catch(e){}
+$('enter').addEventListener('click',enter);$('code').addEventListener('keydown',e=>{if(e.key==='Enter')enter()});
+</script>
+</body>
+</html>

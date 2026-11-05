@@ -136,7 +136,7 @@ function draw(){
   if(!rows.length){L.append(el('p','empty','여기엔 후기가 없어곰'));return}
   rows.forEach(x=>{const c=el('div','rv'+(x.st==='off'?' hide':''));
     const top=el('div','top');top.append(el('span','stars',stars(x.s)),el('span','k',(x.f?'🔥 ':'')+x.k),el('span','st-l '+ST[x.st][1],ST[x.st][0]),el('span','when',x.at));
-    const meta=el('div','meta');if(x.test)meta.append(el('span','tag test','테스트 · 손님에게 안 보임'));if(x.buy)meta.append(el('span','tag buy','구매 인증'));meta.append(el('span','tag',x.k==='무료 사주'?'무료':'유료 풀이'));if(x.ev)meta.append(el('span','tag',x.k==='무료 사주'?'🪙 곰코인 3개 지급':'후기 이벤트 참여 · 질문 1개 지급'));
+    const meta=el('div','meta');if(x.test)meta.append(el('span','tag test','테스트 · 손님에게 안 보임'));if(x.buy)meta.append(el('span','tag buy','구매 인증'));meta.append(el('span','tag',x.k==='무료 사주'?'무료':'유료 풀이'));if(x.cn||x.ev)meta.append(el('span','tag',x.cn||x.k==='무료 사주'?'🪙 곰코인 3개 지급':'후기 이벤트 참여'));
     const acts=el('div','acts'),p=el('button','pub','공개하기'),h=el('button','hid','숨기기');p.type=h.type='button';p.disabled=x.st==='on'||!!x.test;h.disabled=x.st==='off'||!!x.test;
     p.addEventListener('click',()=>setSt(x,'on',p,h));h.addEventListener('click',()=>setSt(x,'off',p,h));acts.append(p,h);
     c.append(top,el('p','txt'+(x.t?'':' none'),x.t||'(별점만 남김)'),meta);if(!x.test)c.append(acts);L.append(c)});
@@ -156,7 +156,7 @@ async function coinLoad(){try{const r=await fetch('/api/coin',{method:'POST',hea
   $('cnDay').textContent=c.today+(c.on?' · 체험 중 (~'+c.end+')':' · 체험 끝');
   $('cDay').textContent=dl+' / '+c.dayQuota;$('cLeft').textContent=c.left+' / '+c.pool;$('cWon').textContent=c.dayWon.toLocaleString()+'원';
   $('cMore').textContent='오늘 나간 코인 '+c.dayIssued+'개 · 전체 나간 코인 '+c.issued+'개 · 하루 사용 한도 '+c.dailyWon.toLocaleString()+'원\n'+
-    '코인 받은 사람 '+n('claims')+'명 · 친구 초대 보상 '+n('refs')+'번 · 지갑 '+n('wallets')+'개\n'+
+    '후기 코인 지급 '+n('claims')+'번 (무료 사주 '+n('claims_free')+' · 유료 풀이 '+n('claims_paid')+') · 친구 초대 보상 '+n('refs')+'번 · 지갑 '+n('wallets')+'개\n'+
     '쓴 횟수: 보고서·궁합 '+n('use_report')+' · 타로 '+n('use_tarot')+' · 질문 '+n('use_ask')+' · 실패 환불 '+n('refunds')+'\n'+
     '(사람 수·쓴 횟수는 이번 업데이트부터 세요)'}
   catch(e){$('cMore').textContent='곰코인 숫자를 못 불러왔어곰'}}

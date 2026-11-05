@@ -1026,8 +1026,8 @@ let RV_ITEMS=[],RV_DONE=new Set(),RV_SEL=null;
 const rvId=(k,f)=>k+'|'+(f?'f':'s'),rvK=id=>id.split('|')[0],rvF=id=>id.endsWith('|f');
 const rvLab=id=>(rvF(id)?'🔥 ':'')+rvK(id);
 function rvStrip(id){const b=el('button','rv-strip');b.type='button';b.dataset.rv=id;rvStripTxt(b);b.addEventListener('click',()=>{if(RV_DONE.has(id))return;RV_SEL=id;rvOpen()});return b}
-function rvStripTxt(b){const id=b.dataset.rv,done=RV_DONE.has(id),paid=rvK(id)!=='무료 사주',fire=rvF(id);b.classList.toggle('done',done);b.classList.toggle('gift',paid&&!done);
-  b.innerHTML='';b.append(el('span','rv-si',done?'✓':paid?'🎁':'⭐'),el('span','rv-st2',done?(fire?'후기 접수 완료. 고맙다':'후기 고마워곰!'):paid?(fire?'불곰 풀이 어땠냐? 후기 쓰고 질문 1개 받아':'이 풀이 어땠어곰? 후기 쓰고 질문 1개 받기'):'사주 풀이 어땠어곰? 한 줄 후기 남기기'),el('span','rv-ar',done?'':'›'))}
+function rvStripTxt(b){const id=b.dataset.rv,done=RV_DONE.has(id),paid=rvK(id)!=='무료 사주'&&!cnOn(),fire=rvF(id);b.classList.toggle('done',done);b.classList.toggle('gift',paid&&!done);
+  b.innerHTML='';b.append(el('span','rv-si',done?'✓':paid?'🎁':'⭐'),el('span','rv-st2',done?(fire?'후기 접수 완료. 고맙다':'후기 고마워곰!'):paid?(fire?'불곰 풀이 어땠냐? 후기 쓰고 질문 1개 받아':'이 풀이 어땠어곰? 후기 쓰고 질문 1개 받기'):(rvK(id)==='무료 사주'?'사주 풀이 어땠어곰? 한 줄 후기 남기기':(fire?'불곰 풀이 어땠냐? 한 줄 후기 남겨':'이 풀이 어땠어곰? 한 줄 후기 남기기'))),el('span','rv-ar',done?'':'›'))}
 let RV_PRESET=0;
 function rvCard(id){const c=el('section','card rv-card');c.dataset.rv=id;rvCardTxt(c);return c}
 function rvCardTxt(c){const id=c.dataset.rv,done=RV_DONE.has(id);c.textContent='';c.classList.toggle('done',done);
@@ -1379,7 +1379,7 @@ function tShow(T){
   if(Array.isArray(r.할일)&&r.할일.length){const t=el('div','ab');t.append(el('b',null,fire?'✅ 당장 이거 해라':'✅ 이렇게 해보자곰'));const ul=el('ul');r.할일.slice(0,4).forEach(x=>ul.append(hiEl('li',null,x)));t.append(ul);box.append(t)}
   box.append(el('p','muted','타로는 지금 마음과 흐름을 비춰 보는 거울이야곰. 결정은 언제나 내가 하는 거야곰.'));
   box.append(rvAdd('타로',fire));
-  const again=el('button','btn ghost','다른 고민으로 또 보기 (890원)');again.type='button';again.addEventListener('click',()=>{tarotClear(T.tone);$('tq').value='';$('tqn').textContent=0;$('tab-tarot').scrollIntoView({behavior:'smooth'})});box.append(again);
+  const again=el('button','btn ghost',cnOn()?'다른 고민으로 또 보기 (🪙3코인)':'다른 고민으로 또 보기 (890원)');again.type='button';again.addEventListener('click',()=>{tarotClear(T.tone);$('tq').value='';$('tqn').textContent=0;$('tab-tarot').scrollIntoView({behavior:'smooth'})});box.append(again);
   o.append(box);showRep(curKey());T.busy=false;
   const m=T.el.querySelector('.tmsg');if(m)m.textContent='곰이 카드를 다 읽었어곰! 아래 풀이를 봐곰';
   setTimeout(()=>box.scrollIntoView({behavior:'smooth',block:'start'}),400);

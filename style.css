@@ -654,3 +654,16 @@ span.ico{font-size:inherit!important;padding:0!important;line-height:0!important
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .kw{background:linear-gradient(transparent 56%,rgba(255,201,60,.45) 56%);color:#fff}:root:not([data-theme="light"]) .ai.fire .kw{background:linear-gradient(transparent 56%,rgba(255,138,101,.35) 56%)}}
 :root[data-theme="dark"] .kw{background:linear-gradient(transparent 56%,rgba(255,201,60,.45) 56%);color:#fff}
 .bb.bear.fire .kw{background:linear-gradient(transparent 56%,rgba(255,138,101,.45) 56%)}
+
+/* 후기 전체 보기 팝업 */
+.pr-all{display:block;width:100%;margin:10px 0 0;padding:11px;border:1.5px solid var(--line);border-radius:14px;background:var(--mist);color:var(--accent);font:inherit;font-size:15px;cursor:pointer}
+.pr-m{position:fixed;inset:0;z-index:9997;background:rgba(20,28,40,.5);display:flex;align-items:center;justify-content:center;padding:16px}
+.pr-m[hidden]{display:none}
+.pr-box{position:relative;background:var(--card);border-radius:20px;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px 18px}
+.pr-top{position:sticky;top:0;background:var(--card);padding:16px 0 8px;z-index:1;border-bottom:1px solid var(--line)}
+.pr-top .pr-h{padding-right:44px}
+.pr-x2{position:absolute;top:12px;right:0;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.pr-fl{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}.pr-fl::-webkit-scrollbar{display:none}
+.pr-chip{flex:none;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 11px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+.pr-chip.on{border-color:var(--accent);color:var(--accent);background:var(--mist)}
+.pr-load{display:block;width:100%;margin:8px 0 0;padding:10px;border:0;border-radius:12px;background:var(--mist);color:var(--accent);font:inherit;font-size:14.5px;cursor:pointer}

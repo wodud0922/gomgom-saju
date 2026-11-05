@@ -52,6 +52,20 @@ input,button{font:inherit}
 .acts .pub{border-color:var(--good);color:var(--good)}.acts .hid{border-color:var(--care);color:var(--care)}
 .acts button:disabled{opacity:.35;cursor:default}
 .empty{text-align:center;color:var(--sub);padding:24px 0}
+.tst{margin-top:18px;border:2px dashed #c9a7ff;border-radius:16px;padding:14px;background:var(--card)}
+.tst h2{font-size:15px;margin:0 0 4px;font-weight:600}.tst .demo{margin:0 0 10px}
+.tst .row{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}
+.tst select,.tst textarea{font:inherit;font-size:14px;border:1.5px solid var(--line);border-radius:10px;padding:7px 9px;background:var(--mist);color:var(--ink)}
+.tst textarea{width:100%;resize:vertical}
+.tst label{font-size:13.5px;display:flex;align-items:center;gap:4px}
+.tst .go{flex:1;padding:9px;border:0;border-radius:10px;background:#8b6fd6;color:#fff;font:inherit;font-size:14.5px;cursor:pointer}
+.tst .del{padding:9px 12px;border:1.5px solid var(--care);color:var(--care);background:none;border-radius:10px;font:inherit;font-size:13.5px;cursor:pointer}
+.tag.test{color:#8b6fd6;border-color:#8b6fd6}
+.pv{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.pv>b{font-size:14px}.pc{border:1.5px solid var(--line);border-radius:14px;padding:9px 11px;margin:7px 0;background:var(--mist)}
+.pc .t1{display:flex;gap:8px;font-size:13px;align-items:center}.pc .t1 .d{margin-left:auto;color:var(--sub)}
+.pc p{margin:4px 0;font-size:14.5px}.pc .g{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--sub)}
+.pc .g i{font-style:normal;border:1px solid var(--line);border-radius:999px;padding:0 7px}.pc .g i.buy{color:var(--good);border-color:currentColor}
 .msg{min-height:1.2em;color:var(--care);font-size:14px;margin:10px 0 0}
 .lnk{background:none;border:0;padding:0;color:var(--accent);font:inherit;font-size:12.5px;cursor:pointer;text-decoration:underline}
 @media (max-width:420px){.st b{font-size:19px}.tp{grid-template-columns:70px 1fr 58px}}
@@ -78,32 +92,54 @@ input,button{font:inherit}
 <div class="card topics"><h2>풀이별 평균 별점</h2><div id="tps"></div></div>
 <div class="bar" id="bar"></div>
 <div id="list"></div>
+<section class="tst">
+<h2>🧪 테스트 후기 만들기</h2>
+<p class="demo">화면 확인용이에요. 여기서 만든 후기는 <b>이 관리자 화면에서만</b> 보이고, 손님 화면과 평균 별점에는 절대 나가지 않아요.</p>
+<div class="row">
+<select id="tS"><option value="5">★★★★★</option><option value="4">★★★★☆</option><option value="3">★★★☆☆</option><option value="2">★★☆☆☆</option><option value="1">★☆☆☆☆</option></select>
+<select id="tK"><option>무료 사주</option><option>연애운</option><option>재물운</option><option>직업·적성</option><option>결혼운</option><option>합격운</option><option>궁합</option><option>타로</option></select>
+<select id="tF"><option value="0">🐻‍❄️ 다정한 곰</option><option value="1">🔥 불곰</option></select>
+</div>
+<div class="row"><label><input type="checkbox" id="tBuy"> 구매 인증 표시</label><label><input type="checkbox" id="tEv"> 후기 이벤트 참여 표시</label></div>
+<textarea id="tT" rows="2" maxlength="100" placeholder="후기 내용 (선택)"></textarea>
+<div class="row"><button type="button" class="go" id="tGo">테스트 후기 만들기</button><button type="button" class="del" id="tDel">테스트 후기 모두 지우기</button></div>
+<div class="pv" id="pv"></div>
+</section>
 </section>
 </main>
 <script>
 const $=id=>document.getElementById(id);
 const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
 let RV=[],CODE="";
-const ST={wait:['공개 대기','wait'],on:['공개 중','on'],off:['숨김','off']};
+const ST={wait:['공개 대기','wait'],on:['공개 중','on'],off:['숨김','off'],test:['테스트','test']};
 let F='all';
 const stars=n=>'★★★★★'.slice(0,n)+'☆☆☆☆☆'.slice(0,5-n);
 function draw(){
-  const avg=RV.length?RV.reduce((a,x)=>a+x.s,0)/RV.length:0;
-  $('sAvg').textContent=RV.length?'★ '+avg.toFixed(1):'-';$('sAll').textContent=RV.length;$('sWait').textContent=RV.filter(x=>x.st==='wait').length;
-  const g={};RV.forEach(x=>{(g[x.k]=g[x.k]||[]).push(x.s)});
+  const REAL=RV.filter(x=>!x.test);
+  const avg=REAL.length?REAL.reduce((a,x)=>a+x.s,0)/REAL.length:0;
+  $('sAvg').textContent=REAL.length?'★ '+avg.toFixed(1):'-';$('sAll').textContent=REAL.length;$('sWait').textContent=RV.filter(x=>x.st==='wait').length;
+  const g={};REAL.forEach(x=>{(g[x.k]=g[x.k]||[]).push(x.s)});
   $('tps').textContent='';Object.entries(g).sort((a,b)=>b[1].length-a[1].length).forEach(([k,v])=>{const m=v.reduce((a,b)=>a+b,0)/v.length,r=el('div','tp'),bar=el('i'),u=el('u');u.style.width=(m/5*100)+'%';bar.append(u);r.append(el('span',null,k),bar,el('em',null,'★'+m.toFixed(1)+' · '+v.length));$('tps').append(r)});
-  const fs=[['all','전체',RV.length],['wait','공개 대기',RV.filter(x=>x.st==='wait').length],['on','공개 중',RV.filter(x=>x.st==='on').length],['off','숨김',RV.filter(x=>x.st==='off').length],['low','별 1~2개',RV.filter(x=>x.s<=2).length]];
+  const fs=[['all','전체',REAL.length],['wait','공개 대기',RV.filter(x=>x.st==='wait').length],['on','공개 중',RV.filter(x=>x.st==='on').length],['off','숨김',RV.filter(x=>x.st==='off').length],['low','별 1~2개',REAL.filter(x=>x.s<=2).length],['test','🧪 테스트',RV.filter(x=>x.test).length]];
   $('bar').textContent='';fs.forEach(([k,l,n])=>{const b=el('button','f',l);b.type='button';b.setAttribute('aria-pressed',F===k);b.append(el('small',null,n));b.addEventListener('click',()=>{F=k;draw()});$('bar').append(b)});
   const L=$('list');L.textContent='';
-  const rows=RV.filter(x=>F==='all'||(F==='low'?x.s<=2:x.st===F));
+  const rows=RV.filter(x=>F==='test'?x.test:!x.test&&(F==='all'||(F==='low'?x.s<=2:x.st===F)));
   if(!rows.length){L.append(el('p','empty','여기엔 후기가 없어곰'));return}
   rows.forEach(x=>{const c=el('div','rv'+(x.st==='off'?' hide':''));
     const top=el('div','top');top.append(el('span','stars',stars(x.s)),el('span','k',(x.f?'🔥 ':'')+x.k),el('span','st-l '+ST[x.st][1],ST[x.st][0]),el('span','when',x.at));
-    const meta=el('div','meta');meta.append(el('span','tag',x.k==='무료 사주'?'무료':'유료 풀이'));if(x.ev)meta.append(el('span','tag','후기 이벤트 참여 · 질문 1개 지급'));
-    const acts=el('div','acts'),p=el('button','pub','공개하기'),h=el('button','hid','숨기기');p.type=h.type='button';p.disabled=x.st==='on';h.disabled=x.st==='off';
+    const meta=el('div','meta');if(x.test)meta.append(el('span','tag test','테스트 · 손님에게 안 보임'));if(x.buy)meta.append(el('span','tag buy','구매 인증'));meta.append(el('span','tag',x.k==='무료 사주'?'무료':'유료 풀이'));if(x.ev)meta.append(el('span','tag','후기 이벤트 참여 · 질문 1개 지급'));
+    const acts=el('div','acts'),p=el('button','pub','공개하기'),h=el('button','hid','숨기기');p.type=h.type='button';p.disabled=x.st==='on'||!!x.test;h.disabled=x.st==='off'||!!x.test;
     p.addEventListener('click',()=>setSt(x,'on',p,h));h.addEventListener('click',()=>setSt(x,'off',p,h));acts.append(p,h);
-    c.append(top,el('p','txt'+(x.t?'':' none'),x.t||'(별점만 남김)'),meta,acts);L.append(c)});
+    c.append(top,el('p','txt'+(x.t?'':' none'),x.t||'(별점만 남김)'),meta);if(!x.test)c.append(acts);L.append(c)});
+  drawPv();
 }
+const NICK=['포근한','졸린','배부른','수줍은','씩씩한','느긋한','반짝이는','말랑한','꼬마','용감한','예리한'];
+function drawPv(){const P=$('pv');P.textContent='';const T=RV.filter(x=>x.test);if(!T.length)return;
+  P.append(el('b',null,'👀 손님 화면에서는 이렇게 보여요 (미리보기)'));
+  T.slice(0,6).forEach((x,i)=>{const c=el('div','pc'),t=el('div','t1');t.append(el('span','stars',stars(x.s)),el('span','k',(x.f?'🔥 ':'')+x.k),el('span','d',String(x.at||'').slice(0,5)));c.append(t);if(x.t)c.append(el('p',null,x.t));
+    const g=el('div','g');g.append(el('span',null,NICK[i%NICK.length]+' 곰 #'+String(1000+i*731).slice(-4)));if(x.buy)g.append(el('i','buy','구매 인증'));if(x.ev)g.append(el('i',null,'후기 이벤트 참여'));c.append(g);P.append(c)})}
+async function mkTest(){const b=$('tGo');b.disabled=true;try{const j=await api({action:'test',s:+$('tS').value,k:$('tK').value,f:+$('tF').value,buy:$('tBuy').checked?1:0,ev:$('tEv').checked?1:0,t:$('tT').value.trim()});RV=j.list||RV;$('tT').value='';F='test';draw()}catch(e){alertMsg(e.error||'못 만들었어곰')}finally{b.disabled=false}}
+async function purge(){if(!RV.some(x=>x.test))return;const b=$('tDel');b.disabled=true;try{const j=await api({action:'purge'});RV=j.list||RV;F='all';draw()}catch(e){alertMsg(e.error||'못 지웠어곰')}finally{b.disabled=false}}
 async function api(body){const r=await fetch('/api/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({code:CODE},body))});const j=await r.json().catch(()=>({}));if(!r.ok)throw j;return j}
 async function load(){const j=await api({action:'admin'});RV=j.list||[];draw()}
 async function setSt(x,st,p,h){p.disabled=h.disabled=true;try{const j=await api({action:'set',id:x.id,st});RV=j.list||RV;draw()}catch(e){alertMsg(e.error||'바꾸지 못했어곰');draw()}}
@@ -114,6 +150,7 @@ async function enter(){CODE=$('code').value.trim();if(!CODE)return;$('msg').text
 $('reload').addEventListener('click',()=>load().catch(e=>alertMsg(e.error||'못 불러왔어곰')));
 $('out').addEventListener('click',()=>{try{sessionStorage.removeItem('gg_admin')}catch(e){}CODE='';RV=[];$('code').value='';$('dash').hidden=true;$('login').hidden=false});
 try{const c=sessionStorage.getItem('gg_admin');if(c){$('code').value=c;enter()}}catch(e){}
+$('tGo').addEventListener('click',mkTest);$('tDel').addEventListener('click',purge);
 $('enter').addEventListener('click',enter);$('code').addEventListener('keydown',e=>{if(e.key==='Enter')enter()});
 </script>
 </body>

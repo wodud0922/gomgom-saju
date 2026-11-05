@@ -219,6 +219,7 @@
 <div class="loading" id="loading" hidden role="status" aria-live="polite"><div class="ld-box"><img src="bear.svg" width="110" height="95" alt="" class="ld-bear"><p id="ldTxt"></p><div class="ld-bar"><i></i></div></div></div>
 <dialog id="dlg"><div class="dlg"><h4 id="dT"></h4><p class="one" id="dO"></p><div id="dB"></div><button class="btn" type="button" id="dX">알겠어곰</button></div></dialog>
 
+<div id="prModal" class="pr-m" hidden role="dialog" aria-modal="true" aria-label="곰손님 후기"><div class="pr-box"><div class="pr-top"><div class="pr-mh pr-h"></div><button type="button" class="pr-x2" aria-label="닫기">✕</button><div class="pr-fl"></div></div><div class="pr-mb"></div></div></div>
 <div id="rvSheet" class="rv-sh" hidden role="dialog" aria-modal="true" aria-label="후기 남기기"><div class="rv-pan"><button type="button" class="rv-x" aria-label="닫기">✕</button><div id="rvBody"></div></div></div>
 <script>
 const $=id=>document.getElementById(id);
@@ -1044,16 +1045,31 @@ function rvClose(){$('rvSheet').hidden=true;document.body.style.overflow=''}
 $('rvSheet').addEventListener('click',e=>{if(e.target.id==='rvSheet'||e.target.closest('.rv-x'))rvClose()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('rvSheet').hidden)rvClose()});
 /* ----- 곰손님 후기 (내가 공개한 후기만) ----- */
+function prCard(r){const c=el('div','pr-c'),s=Math.max(1,Math.min(5,+r.s||0));
+  const top=el('div','pr-t');top.append(el('span','pr-s','★★★★★'.slice(0,s)+'☆☆☆☆☆'.slice(0,5-s)),el('span','pr-k',(r.f?'🔥 ':'')+r.k),el('span','pr-d',String(r.d||'').slice(0,5)));
+  c.append(top);if(r.t)c.append(el('p','pr-x',r.t));
+  const tg=el('div','pr-g');tg.append(el('span','pr-nick',r.n||'익명의 곰손님'));if(r.ev)tg.append(el('span','pr-tag ev','후기 이벤트 참여'));c.append(tg);return c}
+const prGet=(k,off,n)=>fetch('/api/review?n='+n+'&off='+off+(k?'&k='+encodeURIComponent(k):'')).then(r=>r.ok?r.json():null);
 function pubRv(){const w=$('pubRv');if(!w)return;
-  fetch('/api/review').then(r=>r.ok?r.json():null).then(j=>{if(!j||!Array.isArray(j.list)||!j.list.length||!j.n)return;let open=false;const L=j.list;
-    const draw=()=>{w.textContent='';
-      const h=el('div','pr-h');h.append(el('b',null,'곰손님 후기'),el('span','pr-avg','★ '+(+j.avg).toFixed(1)),el('span','pr-n','('+j.n+')'));w.append(h);
-      L.slice(0,open?L.length:3).forEach(r=>{const c=el('div','pr-c'),s=Math.max(1,Math.min(5,+r.s||0));
-        const top=el('div','pr-t');top.append(el('span','pr-s','★★★★★'.slice(0,s)+'☆☆☆☆☆'.slice(0,5-s)),el('span','pr-k',(r.f?'🔥 ':'')+r.k),el('span','pr-d',String(r.d||'').slice(0,5)));
-        c.append(top);if(r.t)c.append(el('p','pr-x',r.t));
-        const tg=el('div','pr-g');tg.append(el('span','pr-nick',r.n||'익명의 곰손님'));if(r.ev)tg.append(el('span','pr-tag ev','후기 이벤트 참여'));c.append(tg);w.append(c)});
-      if(L.length>3){const more=el('button','pr-more',open?'접기 ▴':'후기 더 보기 ▾');more.type='button';more.addEventListener('click',()=>{open=!open;draw()});w.append(more)}};
-    draw();w.hidden=false}).catch(()=>{})}
+  prGet('',0,3).then(j=>{if(!j||!Array.isArray(j.list)||!j.list.length||!j.n)return;w.textContent='';
+    const h=el('div','pr-h');h.append(el('b',null,'곰손님 후기'),el('span','pr-avg','★ '+(+j.avg).toFixed(1)),el('span','pr-n','('+j.n+')'));w.append(h);
+    j.list.forEach(r=>w.append(prCard(r)));
+    if(j.total>3){const more=el('button','pr-all','후기 전체 보기 ('+j.total+'개) ›');more.type='button';more.addEventListener('click',()=>prOpen(j));w.append(more)}
+    w.hidden=false}).catch(()=>{})}
+function prOpen(j0){const m=$('prModal'),box=m.querySelector('.pr-box'),body=m.querySelector('.pr-mb'),chips=m.querySelector('.pr-fl'),hd=m.querySelector('.pr-mh');let K='',off=0,busy=false,seq=0;
+  hd.textContent='';hd.append(el('b',null,'곰손님 후기'),el('span','pr-avg','★ '+(+j0.avg).toFixed(1)),el('span','pr-n','('+j0.n+')'));
+  const kinds=[['',j0.total],...Object.entries(j0.counts||{})];
+  const drawChips=()=>{chips.textContent='';kinds.forEach(([k,c])=>{const b=el('button','pr-chip'+(k===K?' on':''),(k||'전체')+' '+c);b.type='button';b.addEventListener('click',()=>{if(K===k)return;K=k;drawChips();load(true)});chips.append(b)})};
+  const load=async reset=>{if(busy&&!reset)return;busy=true;const my=++seq;if(reset){off=0;body.textContent='';box.scrollTop=0}
+    const old=body.querySelector('.pr-load');if(old){old.disabled=true;old.textContent='불러오는 중이야곰…'}
+    let j=null;try{j=await prGet(K,off,10)}catch(e){}if(my!==seq)return;busy=false;if(old)old.remove();
+    if(!j){body.append(el('p','pr-demo','후기를 불러오지 못했어곰. 잠시 뒤에 다시 열어 줘곰'));return}
+    j.list.forEach(r=>body.append(prCard(r)));off+=10;
+    if(j.more){const b=el('button','pr-load','더 불러오기 ('+(j.total-off)+'개 남음)');b.type='button';b.addEventListener('click',()=>load(false));body.append(b)}};
+  drawChips();load(true);m.hidden=false;document.body.style.overflow='hidden'}
+function prClose(){$('prModal').hidden=true;document.body.style.overflow=''}
+document.addEventListener('click',e=>{const m=$('prModal');if(!m||m.hidden)return;if(e.target===m||e.target.closest('.pr-x2'))prClose()});
+document.addEventListener('keydown',e=>{const m=$('prModal');if(e.key==='Escape'&&m&&!m.hidden)prClose()});
 setTimeout(pubRv,0);
 async function makeReport(btn,R){
   if(!CTX)return;if(BUSY.has(R.key)){$('payMsg').textContent='곰이 이 보고서를 아직 쓰는 중이야곰. 조금만 기다려 줘곰';return}

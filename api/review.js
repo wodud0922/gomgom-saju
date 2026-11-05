@@ -107,7 +107,7 @@ module.exports = async (req, res) => {
       };
       await redis([['HSET', 'rv:data', id, JSON.stringify(r)], ['ZADD', 'rv:all', r.ts, id]]);
       let coin = null;
-      if (k === '무료 사주' && b.w) { try { coin = await COIN.earn(req, String(b.w), r.t, b.ref); if (coin && coin.got) { r.ev = 1; await redis([['HSET', 'rv:data', id, JSON.stringify(r)]]); } } catch (e) { console.error('coin earn', String(e.message).slice(0, 80)); } }
+      if (b.w) { try { coin = await COIN.earn(req, String(b.w), r.t, b.ref, k, b.tk); if (coin && coin.got) { r.cn = 1; await redis([['HSET', 'rv:data', id, JSON.stringify(r)]]); } } catch (e) { console.error('coin earn', String(e.message).slice(0, 80)); } }
       return res.status(200).json({ ok: true, coin });
     }
 

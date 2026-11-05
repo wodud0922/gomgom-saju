@@ -9,7 +9,7 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="곰곰 사주 · 내 사주를 같이 봐보자곰!">
 <meta property="og:description" content="사주 여덟 글자부터 대운, 신살, 잘 맞는 사람까지 하얀 곰이 쉽게 풀어줘요.">
-<meta property="og:image" content="https://gomgom-saju-mauve.vercel.app/og.png">
+<meta property="og:image" content="https://gomgom-saju-mauve.vercel.app/og.png?v=2">
 <meta property="og:url" content="https://gomgom-saju-mauve.vercel.app/">
 <link rel="canonical" href="https://gomgom-saju-mauve.vercel.app/">
 <meta name="twitter:card" content="summary_large_image">
@@ -33,6 +33,15 @@
 <h1>곰곰 사주</h1>
 <p class="lead">사주 보고 싶은데 한자랑 어려운 용어 때문에 막막했지? 곰이 처음 보는 사람도 다 알아듣게 쉽게 풀어줘곰.</p>
 <ul class="feat"><li><b>무료</b>로 생년월일만 넣으면 내 사주 전체 풀이</li><li>모르는 말은 <b>눌러 보면 바로</b> 쉬운 설명</li><li>다정한 곰이나 매운맛 불곰이 연애·돈·일·타로까지</li></ul>
+<label class="agree"><input type="checkbox" id="agreeChk"><span>[필수] 만 14세 이상이며, 개인정보 수집·이용에 동의해요</span></label>
+<details class="agree-d"><summary>내용 보기</summary><div>
+<p><b>수집 항목</b> 이름(별명 가능), 성별, 생년월일, 태어난 시간, 태어난 곳. 유료 풀이를 이용하면 궁합 상대의 이름·성별·생년월일·태어난 시간, 질문·고민 내용, 고른 타로 카드</p>
+<p><b>이용 목적</b> 사주·궁합·타로 풀이 제공</p>
+<p><b>보유 기간</b> 저장하지 않아요. 무료 사주는 내 기기 화면 안에서만 계산하고, 유료 풀이는 풀이를 만드는 동안에만 처리해요.</p>
+<p><b>처리 위탁·국외 이전</b> 유료 풀이 작성 처리를 위해 Anthropic, PBC(미국)로, 사이트 운영을 위해 Vercel Inc.(미국)로 암호화된 통신으로 전송돼요. 유료 풀이를 이용하지 않으면 국외로 전송되지 않아요.</p>
+<p><b>거부할 권리</b> 동의하지 않을 수 있지만, 그러면 사주 풀이를 볼 수 없어요.</p>
+<p><a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침 전체 보기</a></p>
+</div></details>
 <button class="btn" id="startBtn" type="button">사주 보러 가기</button>
 </section>
 <section class="card" id="form" hidden>
@@ -198,7 +207,7 @@
 <p class="toast" id="payMsg" role="status"></p>
 <div id="aiOut"></div>
 </section>
-<p class="foot">재미로 봐주면 좋겠어곰. 입력한 정보는 저장하지 않아곰.<br>시간은 태어난 곳 경도와 1987·88년 서머타임, 1954~61년 표준시를 반영했어곰. 그 밖의 옛 서머타임은 반영하지 않아곰.</p>
+<p class="foot">재미로 봐주면 좋겠어곰. 입력한 정보는 저장하지 않아곰. <a href="privacy.html">개인정보처리방침</a><br>시간은 태어난 곳 경도와 1987·88년 서머타임, 1954~61년 표준시를 반영했어곰. 그 밖의 옛 서머타임은 반영하지 않아곰.</p>
 </div>
 </main>
 
@@ -798,7 +807,11 @@ function exTopic(tp){const D=EXD[tp];if(!D)return;const sl=document.querySelecto
   sl[2].innerHTML='<span class="ex-tag">예시 · 미리보기</span><span class="ex-ch">'+D.c[0]+'</span><b class="ex-h">'+esc(D.c[1])+'</b><div class="ex-chips"><i>근거</i>'+D.c[2].map(x=>'<i>'+exBl(x)+'</i>').join('')+'</div><p>'+exBl(D.c[3])+'</p><p>'+exBl(D.c[4])+'</p><div class="ex-tip">🐻‍❄️ '+exBl('지금 할 일 한 줄 조언이 장마다 붙어곰')+'</div><p class="ex-cap">10장 모두 내 사주 글자를 근거로 풀어줘곰</p>'}
 exTopic(topic);
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('[data-topic]'))setTimeout(()=>exTopic(topic),0)});
-$('startBtn').addEventListener('click',()=>{$('intro').hidden=true;$('form').hidden=false;window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>$('nm').focus(),300)});
+$('startBtn').addEventListener('click',()=>{const ag=$('agreeChk');if(!ag.checked){const l=ag.closest('.agree');l.classList.remove('shake');void l.offsetWidth;l.classList.add('shake');setTimeout(()=>l.classList.remove('shake'),1600);return}
+  if(LD)return;LD=true;const L=$('loading'),t=$('ldTxt'),bar=L.querySelector('.ld-bar i'),dur=1830+Math.round(Math.random()*50);
+  t.textContent='곰이 사주 볼 준비를 하는 중이야곰…';L.hidden=false;bar.style.transition='none';bar.style.transform='scaleX(0)';void bar.offsetWidth;
+  requestAnimationFrame(()=>{bar.style.transition='transform '+dur+'ms cubic-bezier(.45,.05,.35,1)';bar.style.transform='scaleX(1)'});
+  setTimeout(()=>{L.hidden=true;LD=false;$('intro').hidden=true;$('form').hidden=false;window.scrollTo({top:0});setTimeout(()=>$('nm').focus(),150)},dur+120)});
 const base=()=>tone==='fire'?BASE_FIRE+fireCalls():BASE;
 document.addEventListener('click',e=>{if(tone!=='fire')return;const t=e.target.closest&&e.target.closest('#buyTopic,#buyGung,#buyAsk,#buyTarot,.pack');if(!t)return;const ok=document.getElementById('fireOk');if(ok&&ok.checked)return;e.preventDefault();e.stopImmediatePropagation();const w=document.getElementById('fireWarn');w.classList.remove('shake');void w.offsetWidth;w.classList.add('shake');w.scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('payMsg').textContent='불곰은 욕 폭탄 동의에 체크해야 볼 수 있다곰'},true);
 /* ===== 결제 설정 =====
@@ -1322,7 +1335,8 @@ $('linkBtn').addEventListener('click',async()=>{
 });
 $('mineBtn').addEventListener('click',()=>{
   ['nm','y','m','d'].forEach(id=>$(id).value='');$('tm').value='12:00';$('noTime').checked=false;$('tm').disabled=false;$('cal').value='solar';$('city').selectedIndex=0;
-  $('res').hidden=true;$('sharedBar').hidden=true;$('formBar').hidden=true;$('form').hidden=false;SHARED=false;history.replaceState(null,'',location.pathname);window.scrollTo({top:0});$('nm').focus();
+  $('res').hidden=true;$('sharedBar').hidden=true;$('formBar').hidden=true;SHARED=false;history.replaceState(null,'',location.pathname);window.scrollTo({top:0});
+  if($('agreeChk').checked){$('form').hidden=false;$('nm').focus()}else{$('form').hidden=true;$('intro').hidden=false}
 });
 (function(){
   const q=new URLSearchParams(location.hash.slice(1)).get('s')||new URLSearchParams(location.search).get('s');if(!q)return;
@@ -1349,10 +1363,11 @@ function startRun(friend){
   if(!(y>=1900&&y<=2099&&m>=1&&m<=12&&d>=1&&d<=31)||typeof Solar==='undefined'){run();return}
   const nm=($('nm').value.trim()||'곰친구').slice(0,12),who=friend?'친구가 보내 준 '+nm+'님':nm+'님';
   const msgs=[who+'의 사주를 펼쳐 보는 중이야곰…','태어난 날의 여덟 글자를 뽑는 중이야곰…','오행이랑 신살을 살펴보는 중이야곰…','대운 흐름까지 읽는 중이야곰…'];
-  LD=true;$('go').disabled=true;const L=$('loading'),t=$('ldTxt');let k=0;t.textContent=msgs[0];L.hidden=false;
-  const bar=L.querySelector('.ld-bar i');bar.style.transition='none';bar.style.width='0%';void bar.offsetWidth;bar.style.transition='width 1.7s linear';bar.style.width='100%';
-  const iv=setInterval(()=>{k++;if(k<msgs.length)t.textContent=msgs[k]},450);
-  setTimeout(()=>{clearInterval(iv);L.hidden=true;LD=false;$('go').disabled=false;run()},1800);
+  LD=true;$('go').disabled=true;const L=$('loading'),t=$('ldTxt');t.textContent=msgs[0];L.hidden=false;
+  const bar=L.querySelector('.ld-bar i');bar.style.transition='none';bar.style.transform='scaleX(0)';void bar.offsetWidth;
+  const total=4000;requestAnimationFrame(()=>{bar.style.transition='transform '+(total-100)+'ms cubic-bezier(.45,.05,.35,1)';bar.style.transform='scaleX(1)'});
+  msgs.forEach((m,k)=>{if(k)setTimeout(()=>{t.textContent=m},Math.round(k*total/msgs.length))});
+  setTimeout(()=>{L.hidden=true;LD=false;$('go').disabled=false;run()},total);
 }
 $('go').addEventListener('click',()=>startRun());
 ['nm','y','m','d'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter')startRun()}));
@@ -1399,6 +1414,20 @@ function icoWalk(root){
 }
 icoWalk(document.body);
 new MutationObserver(ms=>ms.forEach(m=>{if(m.type==='characterData')icoText(m.target);else m.addedNodes.forEach(icoWalk)})).observe(document.body,{childList:true,subtree:true,characterData:true});
+</script>
+<div id="pvModal" class="pv-m" hidden role="dialog" aria-modal="true" aria-label="개인정보처리방침"><div class="pv-box"><button type="button" class="pv-x" aria-label="닫기">✕</button><div class="pv-body">불러오는 중이야곰…</div></div></div>
+<script>
+(function(){const m=document.getElementById('pvModal'),b=m.querySelector('.pv-body');let done=false;
+function close(){m.hidden=true;document.body.style.overflow=''}
+m.querySelector('.pv-x').addEventListener('click',close);
+m.addEventListener('click',e=>{if(e.target===m)close()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!m.hidden)close()});
+document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a[href="privacy.html"]:not(.pv-raw)');if(!a)return;e.preventDefault();
+  m.hidden=false;document.body.style.overflow='hidden';m.querySelector('.pv-box').scrollTop=0;if(done)return;
+  fetch('privacy.html').then(r=>{if(!r.ok)throw 0;return r.text()}).then(t=>{const d=new DOMParser().parseFromString(t,'text/html'),c=d.querySelector('.card');if(!c)throw 0;
+    b.innerHTML=c.innerHTML;b.querySelectorAll('.tbl table').forEach(t=>{const h=[...t.rows[0].cells].map(x=>x.textContent);[...t.rows].slice(1).forEach(r=>[...r.cells].forEach((x,i)=>x.setAttribute('data-l',h[i]||'')))});done=true})
+  .catch(()=>{b.innerHTML='<p>방침을 불러오지 못했어곰. <a href="privacy.html" target="_top" class="pv-raw">여기를 눌러 열어줘곰</a></p>'})},true);
+})();
 </script>
 </body>
 </html>

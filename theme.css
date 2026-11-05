@@ -51,3 +51,4 @@ html[data-theme="light"] .rv-card .rv-s{color:#e6d9a8}
 .ld-card{image-rendering:pixelated;filter:drop-shadow(0 4px 0 var(--edge));animation:none!important}
 @media (prefers-reduced-motion:no-preference){.ld-card{animation:ldspin 1.3s linear infinite!important}}
 @keyframes ldspin{from{transform:perspective(400px) rotateY(0)}to{transform:perspective(400px) rotateY(360deg)}}
+/* 배포 다시 하기용 표시 2026-11-06 */

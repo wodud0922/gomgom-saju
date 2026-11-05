@@ -22,6 +22,12 @@ module.exports = async (req, res) => {
       const r = await C.refund(b.w, b.ticket);
       return res.status(r.err ? 409 : 200).json(r);
     }
+    if (b.action === 'stats') {
+      const A = String(process.env.ADMIN_CODE || ''), g = String(b.code || '');
+      const ok = A && g.length === A.length && require('crypto').timingSafeEqual(Buffer.from(g), Buffer.from(A));
+      if (!ok) return res.status(401).json({ code: 'admin', error: '관리자 코드가 달라곰' });
+      return res.status(200).json(await C.stats());
+    }
     return res.status(400).json({ code: 'bad' });
   } catch (e) {
     console.error('coin fail', String(e && e.message || e).slice(0, 120));

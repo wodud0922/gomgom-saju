@@ -1,5 +1,6 @@
 // 곰코인 무료 체험 공통 기능 (밑줄로 시작하는 파일은 Vercel이 주소로 열지 않음)
-// Vercel 환경변수(선택): CN_END(마감일, 기본 2026-11-15), CN_POOL(전체 발행 코인, 기본 420), CN_DAILY_WON(하루 사용 한도 원, 기본 7000)
+// Vercel 환경변수(선택): CN_END(마감일, 기본 2026-11-15), CN_POOL(전체 예산 코인, 기본 420), CN_DAILY_WON(하루 사용 한도 원, 기본 7000)
+//   CN_DAY_MIN / CN_DAY_MAX: 매일 자정(한국 시간)에 새로 풀리는 '오늘의 곰코인' 개수 범위 (기본 10~18 안의 3의 배수 = 12·15·18 중 하나, 그날 처음 접속할 때 랜덤으로 정해짐)
 const crypto = require('crypto');
 const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || '';
 const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '';
@@ -8,6 +9,8 @@ const CFG = {
   end: process.env.CN_END || '2026-11-15',
   pool: parseInt(process.env.CN_POOL, 10) || 420,
   dailyWon: parseInt(process.env.CN_DAILY_WON, 10) || 7000,
+  dayMin: parseInt(process.env.CN_DAY_MIN, 10) || 10,
+  dayMax: parseInt(process.env.CN_DAY_MAX, 10) || 18,
   earn: 3, refEarn: 2, refMax: 5, minText: 20, ipPerDay: 5,
   cost: { report: 3, tarot: 3, ask: 1 },
   won: { report: 200, tarot: 40, ask: 25 },      // 대략 원가 (하루 한도 계산용)
@@ -50,18 +53,32 @@ async function newWallet() {
     if (ok) { code = c; break; }
   }
   if (!code) throw new Error('code');
-  await redis([['HSET', 'cn:w:' + w, 'bal', 0, 'claimed', 0, 'refs', 0, 'code', code], ['EXPIRE', 'cn:w:' + w, ttl()]]);
+  await redis([['HSET', 'cn:w:' + w, 'bal', 0, 'claimed', 0, 'refs', 0, 'code', code], ['EXPIRE', 'cn:w:' + w, ttl()], ['HINCRBY', 'cn:stat', 'wallets', 1]]);
   return { w, bal: 0, claimed: false, refs: 0, code };
+}
+// 오늘의 곰코인: 그날 처음 부를 때 dayMin~dayMax 사이 랜덤으로 한 번만 정함 (진짜 한도)
+async function dayQuota() {
+  const k = 'cn:dq:' + today();
+  const step = CFG.earn, lo = Math.ceil(CFG.dayMin / step), hi = Math.max(lo, Math.floor(CFG.dayMax / step)); // 후기 1명 = 3코인이라 3의 배수로 (10~18 → 12·15·18)
+  const n = (lo + crypto.randomInt(hi - lo + 1)) * step;
+  const [, v] = await redis([['SET', k, n, 'NX', 'EX', 172800], ['GET', k]]);
+  return +v || n;
 }
 async function poolLeft() { const [n] = await redis([['GET', 'cn:issued']]); return Math.max(0, CFG.pool - (+n || 0)); }
 async function takePool(n) {
+  const q = await dayQuota(), dk = 'cn:di:' + today();
+  const [d] = await redis([['INCRBY', dk, n], ['EXPIRE', dk, 172800]]);
+  if (d > q) { await redis([['DECRBY', dk, n]]); return 'today'; }
   const [v] = await redis([['INCRBY', 'cn:issued', n]]);
-  if (v > CFG.pool) { await redis([['DECRBY', 'cn:issued', n]]); return false; }
-  return true;
+  if (v > CFG.pool) { await redis([['DECRBY', 'cn:issued', n], ['DECRBY', dk, n]]); return 'pool'; }
+  return '';
 }
 async function state(wl) {
-  const [n, used] = await redis([['GET', 'cn:issued'], ['GET', 'cn:day:' + today()]]);
-  return { on: isOn(), end: CFG.end, left: Math.max(0, CFG.pool - (+n || 0)), pool: CFG.pool, dayFull: (+used || 0) >= CFG.dailyWon,
+  const q = await dayQuota();
+  const [n, used, di] = await redis([['GET', 'cn:issued'], ['GET', 'cn:day:' + today()], ['GET', 'cn:di:' + today()]]);
+  const left = Math.max(0, CFG.pool - (+n || 0));
+  return { on: isOn(), end: CFG.end, left, pool: CFG.pool, dayFull: (+used || 0) >= CFG.dailyWon,
+    dayQuota: q, dayLeft: Math.min(left, Math.max(0, q - (+di || 0))),
     cost: CFG.cost, earn: CFG.earn, refEarn: CFG.refEarn, refMax: CFG.refMax, minText: CFG.minText,
     w: wl && wl.w, bal: wl ? wl.bal : 0, claimed: wl ? wl.claimed : false, refs: wl ? wl.refs : 0, code: wl && wl.code };
 }
@@ -82,15 +99,19 @@ async function earn(req, w, text, ref) {
   // 지갑당 1번: claimed를 먼저 잠금
   const [first] = await redis([['HSETNX', 'cn:once:' + w, 'c', '1'], ['EXPIRE', 'cn:once:' + w, ttl()]]);
   if (!first) return { got: 0, why: 'claimed', bal: wl.bal };
-  if (!(await takePool(CFG.earn))) return { got: 0, why: 'pool', bal: wl.bal };
-  const [bal] = await redis([['HINCRBY', 'cn:w:' + w, 'bal', CFG.earn], ['HSET', 'cn:w:' + w, 'claimed', 1]]);
+  const fail = await takePool(CFG.earn);
+  if (fail) { // 코인이 없으면 잠금을 풀어서 내일 다시 받을 수 있게
+    await redis([['DEL', 'cn:once:' + w], ['DEL', 'cn:txt:' + th], ['DECR', ik]]);
+    return { got: 0, why: fail, bal: wl.bal };
+  }
+  const [bal] = await redis([['HINCRBY', 'cn:w:' + w, 'bal', CFG.earn], ['HSET', 'cn:w:' + w, 'claimed', 1], ['HINCRBY', 'cn:stat', 'claims', 1]]);
   // 친구 초대: 공유한 사람에게 2코인 (최대 5명)
   if (typeof ref === 'string' && /^G[A-Z0-9]{5}$/.test(ref) && ref !== wl.code) {
     const [rw] = await redis([['GET', 'cn:code:' + ref]]);
     if (rw && rw !== w) {
       const [rn] = await redis([['HINCRBY', 'cn:w:' + rw, 'refs', 1]]);
-      if (rn <= CFG.refMax && await takePool(CFG.refEarn)) await redis([['HINCRBY', 'cn:w:' + rw, 'bal', CFG.refEarn]]);
-      else if (rn > CFG.refMax) await redis([['HINCRBY', 'cn:w:' + rw, 'refs', -1]]);
+      if (rn <= CFG.refMax && !(await takePool(CFG.refEarn))) await redis([['HINCRBY', 'cn:w:' + rw, 'bal', CFG.refEarn], ['HINCRBY', 'cn:stat', 'refs', 1]]);
+      else await redis([['HINCRBY', 'cn:w:' + rw, 'refs', -1]]); // 한도 초과나 오늘 코인 마감이면 친구 수도 안 셈
     }
   }
   return { got: CFG.earn, bal };
@@ -107,7 +128,7 @@ async function spend(w, kind) {
   const [used] = await redis([['INCRBY', dk, won], ['EXPIRE', dk, 172800]]);
   if (used > CFG.dailyWon) { await redis([['DECRBY', dk, won], ['HINCRBY', 'cn:w:' + w, 'bal', c]]); return { err: 'day', msg: '오늘 무료 체험이 다 찼어곰. 내일 다시 와줘곰! (코인은 그대로 남아 있어곰)', bal: after + c }; }
   const tk = crypto.randomBytes(16).toString('hex');
-  await redis([['HSET', 'cn:tk:' + tk, 'w', w, 'kind', kind, 'left', CFG.calls[kind], 'ok', 0, 'day', today()], ['EXPIRE', 'cn:tk:' + tk, 3600]]);
+  await redis([['HSET', 'cn:tk:' + tk, 'w', w, 'kind', kind, 'left', CFG.calls[kind], 'ok', 0, 'day', today()], ['EXPIRE', 'cn:tk:' + tk, 3600], ['HINCRBY', 'cn:stat', 'use_' + kind, 1]]);
   return { ticket: tk, bal: after };
 }
 // 풀이가 하나도 안 나왔을 때만 코인 돌려주기
@@ -120,6 +141,7 @@ async function refund(w, tk) {
   if (!first) return { err: 'no' };
   const k = o.kind, cmds = [['HINCRBY', 'cn:w:' + w, 'bal', CFG.cost[k]], ['HSET', 'cn:tk:' + tk, 'left', 0]];
   if (o.day === today()) cmds.push(['DECRBY', 'cn:day:' + today(), CFG.won[k]]);
+  cmds.push(['HINCRBY', 'cn:stat', 'use_' + k, -1], ['HINCRBY', 'cn:stat', 'refunds', 1]);
   const r = await redis(cmds);
   return { bal: r[0] };
 }
@@ -135,4 +157,11 @@ async function useTicket(tk) {
 async function ticketOk(tk) { try { await redis([['HINCRBY', 'cn:tk:' + tk, 'ok', 1]]); } catch (e) {} }
 async function ticketBack(tk) { try { await redis([['HINCRBY', 'cn:tk:' + tk, 'left', 1]]); } catch (e) {} }
 
-module.exports = { CFG, ready, isOn, wallet, newWallet, state, earn, spend, refund, useTicket, ticketOk, ticketBack, poolLeft };
+// 관리자 화면용 숫자
+async function stats() {
+  const q = await dayQuota(), d = today();
+  const [n, used, di, st] = await redis([['GET', 'cn:issued'], ['GET', 'cn:day:' + d], ['GET', 'cn:di:' + d], ['HGETALL', 'cn:stat']]);
+  return { on: isOn(), end: CFG.end, pool: CFG.pool, issued: +n || 0, left: Math.max(0, CFG.pool - (+n || 0)),
+    today: d, dayQuota: q, dayIssued: +di || 0, dayWon: +used || 0, dailyWon: CFG.dailyWon, stat: hmap(st) };
+}
+module.exports = { stats, dayQuota, CFG, ready, isOn, wallet, newWallet, state, earn, spend, refund, useTicket, ticketOk, ticketBack, poolLeft };

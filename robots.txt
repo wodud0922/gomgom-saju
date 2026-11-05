@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://gomgom-saju-mauve.vercel.app/sitemap.xml
+Sitemap: https://www.gomgomsaju.com/sitemap.xml

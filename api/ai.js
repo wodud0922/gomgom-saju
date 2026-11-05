@@ -5,6 +5,7 @@ const MODEL = process.env.CLAUDE_MODEL || 'claude-sonnet-5-5';
 const LIMIT_ON = false;
 const LIMIT = { report: 18, ask: 30 }; // 하루: 보고서 6개(보고서 1개 = 3번 호출), 질문 30개
 const MAX_PROMPT = 16000;               // 글자 수
+const COIN = require('./_coin.js');   // 곰코인 무료 체험 티켓
 const hits = new Map();                 // 간단한 하루 횟수 기록 (서버가 재시작되면 초기화됨)
 
 function today() { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); }
@@ -48,7 +49,13 @@ module.exports = async (req, res) => {
 
   const codes = String(process.env.TESTER_CODES || '').split(',').map(s => s.trim()).filter(Boolean);
   const code = String(b.code || '').trim();
-  if (!codes.length || !codes.includes(code)) return res.status(401).json({ code: 'not_granted', error: '테스터 코드가 맞지 않아곰' });
+  let ticket = '';
+  if (!codes.length || !codes.includes(code)) {
+    // 테스터 코드가 없으면 곰코인 티켓으로만 허용
+    ticket = String(b.ticket || '');
+    let ok = false; try { ok = ticket && await COIN.useTicket(ticket); } catch (e) { ok = false; }
+    if (!ok) return res.status(401).json({ code: ticket ? 'ticket' : 'not_granted', error: ticket ? '곰코인 이용권이 끝났어곰. 다시 해줘곰' : '테스터 코드가 맞지 않아곰' });
+  }
 
   const kind = b.kind === 'ask' ? 'ask' : 'report';
   const prompt = String(b.prompt || '');
@@ -79,13 +86,14 @@ module.exports = async (req, res) => {
       if (/thinking|effort|output_config/i.test(t)) { console.error('fallback to base', t.slice(0, 200)); r = await call(base); }
       else { console.error('anthropic 400', t.slice(0, 300)); return res.status(500).json({ code: 'setup', error: /credit/i.test(t) ? '콘솔 크레딧이 부족해곰 (관리자 충전 필요)' : '곰에게 보낸 요청이 이상해곰' }); }
     }
+    if (ticket && (r.status === 429 || r.status === 529 || r.status >= 500)) await COIN.ticketBack(ticket);
     if (r.status === 429 || r.status === 529) { const ra = Math.min(60, Math.max(5, parseInt(r.headers.get('retry-after') || '15', 10) || 15)); return res.status(429).json({ code: 'rate_limited', retryAfter: ra, error: '곰이 잠깐 숨 고르는 중이야곰' }); }
     if (r.status === 401) return res.status(500).json({ code: 'setup', error: '서버의 API 키가 맞지 않아곰 (관리자 확인 필요)' });
     if (r.status === 400) { const t = await r.text(); console.error('anthropic 400', t.slice(0, 300)); return res.status(500).json({ code: 'setup', error: /credit/i.test(t) ? '콘솔 크레딧이 부족해곰 (관리자 충전 필요)' : '곰에게 보낸 요청이 이상해곰' }); }
     if (!r.ok) { console.error('anthropic', r.status, (await r.text()).slice(0, 300)); return res.status(502).json({ code: 'fail', error: '곰이 글을 가져오지 못했어곰. 다시 해보자곰' }); }
     const j = await r.json();
     const text = (j.content || []).filter(c => c.type === 'text').map(c => c.text || '').join('');
-    try { return res.status(200).json({ ok: true, data: parseJSON(text) }); }
+    try { const data = parseJSON(text); if (ticket) await COIN.ticketOk(ticket); return res.status(200).json({ ok: true, data }); }
     catch (e) { console.error('json fail', j.stop_reason, JSON.stringify(j.usage || {}));
       return res.status(502).json({ code: 'fail', error: j.stop_reason === 'max_tokens' ? '글이 너무 길어서 끊겼어곰' : '곰의 글 형식이 깨졌어곰' }); }
   } catch (e) { console.error('ai fail', e.message); return res.status(502).json({ code: 'fail', error: e.name === 'AbortError' ? '곰이 너무 오래 걸렸어곰' : '곰 서버 연결이 끊겼어곰' }); }

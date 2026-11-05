@@ -6,6 +6,7 @@
 // 손님 IP는 저장하지 않음. 도배 방지용으로 IP를 알아볼 수 없게 바꾼 값만 1시간 동안 셈.
 
 const crypto = require('crypto');
+const COIN = require('./_coin.js');
 const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || '';
 const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '';
 const ADMIN = String(process.env.ADMIN_CODE || '');
@@ -105,7 +106,9 @@ module.exports = async (req, res) => {
         ts: Date.now(), st: 'wait'
       };
       await redis([['HSET', 'rv:data', id, JSON.stringify(r)], ['ZADD', 'rv:all', r.ts, id]]);
-      return res.status(200).json({ ok: true });
+      let coin = null;
+      if (k === '무료 사주' && b.w) { try { coin = await COIN.earn(req, String(b.w), r.t, b.ref); if (coin && coin.got) { r.ev = 1; await redis([['HSET', 'rv:data', id, JSON.stringify(r)]]); } } catch (e) { console.error('coin earn', String(e.message).slice(0, 80)); } }
+      return res.status(200).json({ ok: true, coin });
     }
 
     // 3) 관리자

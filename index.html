@@ -840,14 +840,14 @@ async function pay(item){ // item = {id, name, price}
 let TCODE='';try{TCODE=localStorage.getItem('gomCode')||''}catch(e){}
 async function askAI(prompt,kind,tries){
   tries=tries||0;
-  const TK=TCODE?'':CN_TK;
-  if(!PAY_ON&&!TCODE&&!TK)throw{code:'not_granted',message:'곰 상담소 위쪽에 테스터 코드를 먼저 넣어줘곰'};
+  const TC=(typeof cnOn==='function'&&cnOn())?'':TCODE,TK=TC?'':CN_TK;
+  if(!PAY_ON&&!TC&&!TK)throw{code:'not_granted',message:'곰 상담소 위쪽에 테스터 코드를 먼저 넣어줘곰'};
   let r,j={};
-  try{r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:TCODE,ticket:TK||undefined,kind:kind||'report',prompt})});j=await r.json().catch(()=>({}))}
+  try{r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:TC,ticket:TK||undefined,kind:kind||'report',prompt})});j=await r.json().catch(()=>({}))}
   catch(e){throw{code:'net',message:'인터넷 연결을 확인해 줘곰'}}
   if(r.status===504)throw{code:'fail',message:'곰이 너무 오래 걸려서 멈췄어곰. 다시 해보자곰'};
   if(r.status===429&&j.code==='rate_limited'&&tries<5){const w=(j.retryAfter||15)*1000;const m=$('payMsg');const old=m.textContent;m.textContent='곰이 잠깐 숨 고르는 중이야곰… 자동으로 이어서 쓸게곰';await new Promise(res=>setTimeout(res,w));if(m.textContent.startsWith('곰이 잠깐 숨'))m.textContent=old;return askAI(prompt,kind,tries+1)}
-  if(!r.ok||!j.ok){if(r.status===401&&TCODE){TCODE='';try{localStorage.removeItem('gomCode')}catch(e){}showCode(true)}throw{code:j.code||'fail',message:j.error}}
+  if(!r.ok||!j.ok){if(r.status===401&&TC){TCODE='';try{localStorage.removeItem('gomCode')}catch(e){}showCode(true)}throw{code:j.code||'fail',message:j.error}}
   return j.data;
 }
 function showCode(bad){$('codeBox').hidden=false;$('codeMsg').textContent=bad?'코드가 맞지 않아곰. 다시 확인해 줘곰':'테스트 기간에는 코드를 받은 사람만 쓸 수 있어곰';if(bad)$('tcode').focus()}
@@ -1289,7 +1289,7 @@ $('tq').addEventListener('input',()=>{$('tqn').textContent=$('tq').value.length}
 $('buyTarot').addEventListener('click',async()=>{
   if(!CTX)return;if(TAROT&&TAROT.busy){$('payMsg').textContent='곰이 아직 카드를 읽는 중이야곰';return}
   const q=$('tq').value.trim().slice(0,200);if(q.length<4){$('payMsg').textContent='고민을 조금 더 자세히 적어보자곰';$('tq').focus();return}
-  if(!PAY_ON&&!TCODE&&!CN_TK){showCode(false);$('payMsg').textContent='곰 상담소 위쪽에 테스터 코드를 먼저 넣어줘곰';return}
+  if(!PAY_ON&&!(TCODE&&!cnOn())&&!CN_TK){showCode(false);$('payMsg').textContent='곰 상담소 위쪽에 테스터 코드를 먼저 넣어줘곰';return}
   if(TFREE>0){TFREE--;tLabel()}else if(!(await pay({id:'tarot',name:'타로 3장',price:890})))return;
   if(TAROTS[tone])tarotClear(tone);$('payMsg').textContent='';TAROT={q,tone,picked:[],flipped:0,res:null,err:null,busy:true,key:'tarot:'+tone+':'+Date.now()};
   TAROTS[tone]=TAROT;tarotStage();tarotSync();
@@ -1392,7 +1392,7 @@ document.querySelectorAll('.pack').forEach(b=>b.addEventListener('click',async()
 $('morePack').addEventListener('click',()=>{$('packs').hidden=false;$('packs').scrollIntoView({block:'nearest'})});
 /* ===== 곰코인 무료 체험 (서버 /api/coin 지갑) ===== */
 let CN={on:false,bal:0,claimed:false,refs:0,left:0,pool:420,w:'',code:'',refMax:5},CN_TK='',CN_LAST=null,CN_PEND=null;
-const cnOn=()=>!!CN.on&&!TCODE;
+const cnOn=()=>!!CN.on; // 체험 중에는 테스터 코드가 있어도 모두 똑같이 곰코인으로
 const cnCanEarn=()=>cnOn()&&!CN.claimed&&CN.left>=3;
 function cnRefCode(){try{return localStorage.getItem('gg_ref')||undefined}catch(e){return undefined}}
 try{const rf=new URLSearchParams(location.search).get('ref');if(rf&&/^G[A-Z0-9]{5}$/.test(rf))localStorage.setItem('gg_ref',rf)}catch(e){}
@@ -1400,7 +1400,7 @@ async function cnApi(body){const r=await fetch('/api/coin',{method:'POST',header
 async function cnLoad(){let w='';try{w=localStorage.getItem('gg_w')||''}catch(e){}
   try{const {ok,j}=await cnApi({action:'me',w});if(!ok)return;CN=Object.assign(CN,j);if(j.w){try{localStorage.setItem('gg_w',j.w)}catch(e){}}}catch(e){}cnSync();document.querySelectorAll('.rv-card').forEach(rvCardTxt)}
 function cnSync(){const on=cnOn();$('cnIntro').hidden=!on;$('cnBar').hidden=!on||!CTX;if($('cnShare'))$('cnShare').hidden=!on||!CN.code;
-  $('codeBox').hidden=!!TCODE||PAY_ON||on;$('betaBox').hidden=PAY_ON||on;
+  $('codeBox').hidden=!!TCODE||PAY_ON||on;if(on)$('codeBox').hidden=true;$('betaBox').hidden=PAY_ON||on;
   if(!on&&$('packs'))setQ(QLEFT);
   if(typeof buyLabel==='function')buyLabel();if(typeof tLabel==='function')tLabel();cnAskLabel();
   if(!on)return;
